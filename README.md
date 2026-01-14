@@ -38,9 +38,7 @@
 - 🎮 **Real-time Game:** [Vampire Survival](https://github.com/1985jwlee/portpolio_vampiresurvival) – 실시간 루프·상태 관리 경험  
 - 📊 **Data Pipeline:** [Coin Data API](https://github.com/1985jwlee/portpolio_coindataapi) – 이벤트 기반 API & 운영 경험  
 - 💻 **Frontend Literacy:** [React Experiments](https://github.com/1985jwlee/portpolio_react) - **Admin Dashboard 구현을 위한 Frontend 기술 검증**
-메인 포트폴리오의 운영 대시보드 설계 시 필요한 React 상태 관리 및 UI 구성. 
 
-> Supporting 포트폴리오는 메인 포트폴리오의 설계 판단을 뒷받침
 
 ---
 
