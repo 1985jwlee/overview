@@ -60,11 +60,20 @@
 │   "핵심 설계 원칙 제시"               │
 └──────────────┬──────────────────────┘
                │
-               ↓
+               ├─────────────────────────────┐
+               │                             │
+               ↓                             ↓
+┌──────────────────────┐    ┌──────────────────────┐
+│ Supporting Portfolio │    │ Implementation Demo  │
+│ Coin Data API        │    │ React Dashboard      │
+│ "비게임 도메인 적용" │    │ "운영 도구 구현"     │
+└──────────────────────┘    └──────────────────────┘
+               │                             │
+               ↓                             ↓
 ┌─────────────────────────────────────┐
-│   Supporting Portfolio               │
-│   Coin Data API                      │
-│   "동일 원칙의 비게임 도메인 적용"     │
+│   Additional Portfolios              │
+│   Shader / Vampire Survival          │
+│   "기술 스택 다양성"                  │
 └─────────────────────────────────────┘
 ```
 
@@ -231,43 +240,6 @@ public class DataNormalizationService
 }
 ```
 
-#### 장애 격리 구현
-
-```csharp
-public async Task<IndicatorResponse> GetIndicators(
-    string symbol, string interval)
-{
-    try
-    {
-        // 1. 실시간 데이터 시도
-        var liveData = await _socketClient.GetLatestData(symbol, interval);
-        if (liveData != null)
-        {
-            _cache.Update(symbol, interval, liveData);
-            return new IndicatorResponse
-            {
-                Data = liveData,
-                Status = "live"
-            };
-        }
-    }
-    catch
-    {
-        // 2. 실패 시 캐시된 데이터 제공
-        var cachedData = _cache.Get(symbol, interval);
-        if (cachedData != null)
-        {
-            return new IndicatorResponse
-            {
-                Data = cachedData,
-                Status = "stale",  // 제한적 운영
-                Warning = "Using cached data"
-            };
-        }
-    }
-}
-```
-
 #### 메인 포트폴리오와의 대응
 
 | 원칙 | 게임 서버 (Main) | Coin API (Supporting) |
@@ -280,6 +252,63 @@ public async Task<IndicatorResponse> GetIndicators(
 #### 핵심 메시지
 
 > **"설계 원칙은 도메인을 넘어 일반화 가능합니다"**
+
+---
+
+## 🎨 Implementation Demo
+
+### [React Object State Manager — Admin Dashboard Prototype](https://github.com/1985jwlee/portpolio_react)
+
+**목적**: 메인 포트폴리오의 Admin Dashboard 기술 검증
+
+> **이 프로젝트는 [Event-driven Real-time Game Platform](https://github.com/1985jwlee/portpolio_main)의 Admin Dashboard 프로토타입입니다.**
+
+#### 메인 포트폴리오와의 관계
+
+```
+[ Main: 게임 서버 설계 ]
+    ↓
+    실시간 오브젝트 상태 관리
+    Event-driven Architecture
+    Server-authoritative 구조
+    ↓
+[ React: Admin Dashboard 구현 ]
+    ↓
+    UI 기반 오브젝트 관리
+    상태 저장/복원 메커니즘
+    운영 도구 프로토타입
+```
+
+#### 검증하는 능력
+
+| Main Portfolio | React Portfolio |
+|----------------|-----------------|
+| 서버 오브젝트 상태 관리 | UI 오브젝트 상태 관리 |
+| Event Sourcing | State Management (Zustand) |
+| Snapshot 복구 (서버) | 저장/불러오기 (클라이언트) |
+| 운영 대시보드 **설계** | 운영 도구 **구현** |
+
+#### 핵심 학습
+
+```
+"운영 도구는 백엔드 엔지니어도 만들 수 있어야 한다
+ 시스템의 가시성이 운영 가능성을 결정한다"
+```
+
+#### 실제 적용 예정
+
+- 메인 포트폴리오의 Admin Dashboard 완성
+- 실시간 모니터링 UI
+- 장애 대응 인터페이스
+
+#### 기술 스택
+
+```
+Frontend: React 19, TypeScript
+State: Zustand (전역 상태 관리)
+Styling: Tailwind CSS
+Build: Vite
+```
 
 ---
 
@@ -316,27 +345,6 @@ public async Task<IndicatorResponse> GetIndicators(
 "클라이언트 중심 개발의 한계를 체감하고
  Server-authoritative 구조의 필요성을 이해하게 된 계기"
 ```
-
----
-
-### 💻 Frontend Literacy
-**[React Experiments](https://github.com/1985jwlee/portpolio_react)**
-
-**증명하는 것**:
-- Admin Dashboard 구현 능력
-- Frontend 기술 스택 이해
-- Full-stack 관점
-
-**핵심 학습**:
-```
-"운영 도구는 백엔드 엔지니어도 만들 수 있어야 한다
- 시스템의 가시성이 운영 가능성을 결정한다"
-```
-
-**구현 예정**:
-- 메인 포트폴리오의 Admin Dashboard
-- 실시간 모니터링 UI
-- 장애 대응 인터페이스
 
 ---
 
@@ -473,7 +481,8 @@ public async Task<IndicatorResponse> GetIndicators(
 ```
 1. Overview (본 문서) - 전체 맥락
 2. Main Portfolio README - 핵심 설계 3가지
-3. Coin API README - 적용 사례
+3. React Portfolio README - 운영 도구 구현
+4. Coin API README - 적용 사례
 ```
 
 #### 2. 설계 판단 이해 (30분)
@@ -482,7 +491,9 @@ public async Task<IndicatorResponse> GetIndicators(
    → 왜 이렇게 설계했는가
 2. Main: 장애 영향도 매트릭스
    → 어떻게 격리하는가
-3. Coin API: 정규화 계층 설계
+3. React: 상태 관리 설계
+   → UI 상태를 어떻게 다루는가
+4. Coin API: 정규화 계층 설계
    → 외부 의존성을 어떻게 격리하는가
 ```
 
@@ -490,9 +501,11 @@ public async Task<IndicatorResponse> GetIndicators(
 ```
 1. Main: 기술 스택 가이드
    → 실제 코드 예시
-2. Main: 구현 로드맵
+2. React: 컴포넌트 구조
+   → Frontend 구현 능력
+3. Main: 구현 로드맵
    → 단계별 구현 계획
-3. Main: 운영 가이드
+4. Main: 운영 가이드
    → 실제 운영 시나리오
 ```
 
@@ -532,7 +545,7 @@ public async Task<IndicatorResponse> GetIndicators(
 ✅ **도메인을 넘어선 설계 원칙의 일반화**
 - 게임 서버에서 증명한 원칙
 - 비게임 도메인에서 재검증
-- 다양한 상황에 적용 가능
+- UI 구현에도 동일 원칙 적용
 
 ✅ **실무 관점의 운영 가능성 고려**
 - 장애 시나리오별 대응 방안
