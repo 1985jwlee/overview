@@ -43,8 +43,6 @@
 
 ---
 
-# Overview README - 개선 제안
-
 ## 🏗️ Portfolio Structure
 
 ```mermaid
@@ -166,7 +164,7 @@ graph LR
 ## 📧 Contact
 
 **GitHub**: [@1985jwlee](https://github.com/1985jwlee)  
-**Email**: `[실제 이메일 또는 "Contact via GitHub Issues"]`
+**Email**: `[leejae.w.jl@icloud.com]`
 
 > 💡 포트폴리오에 대한 질문이나 피드백은 각 저장소의 Issues를 활용해주세요.
 
