@@ -2,6 +2,17 @@
 **Real-time & Event-driven Architecture Specialist**
 
 ---
+## 👤 커리어 타임라인
+
+```mermaid
+timeline
+    title Career Timeline
+    2014 : Unity 기반 게임 개발자 입문
+    2020 : 이벤트 기반 시스템 설계
+    2023 : 실시간 컨텐츠 개발
+    2025 : Bun.js / ElysiaJS 기반 백엔드 경험
+```
+---
 
 ## 🎯 Portfolio Philosophy
 
@@ -87,6 +98,33 @@ graph TB
 
 > “무엇을 만들었는가”보다 “어떤 판단으로 이 구조에 도달했는가” 강조
 
+```mermaid
+flowchart TD
+    subgraph Client
+        Unity[Unity Client]:::client
+    end
+
+    subgraph Server
+        GameServer[C# Game Server]:::server
+        EventBus[Kafka Event Stream]:::server
+        Platform[Bun.js / ElysiaJS]:::server
+    end
+
+    subgraph Database
+        Redis[Redis Hot Snapshot]:::db
+        Mongo[MongoDB Cold Snapshot]:::db
+    end
+
+    Unity --> GameServer
+    GameServer --> EventBus
+    EventBus --> Platform
+    GameServer --> Redis
+    GameServer --> Mongo
+
+    classDef client fill:#4A90E2,stroke:#fff,color:#fff;
+    classDef server fill:#FFA07A,stroke:#fff,color:#fff;
+    classDef db fill:#7FFFD4,stroke:#fff,color:#000;
+```
 -----
 
 ## 🎯 Cross-Domain Application
