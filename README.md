@@ -63,7 +63,7 @@ graph TB
     end
     
     subgraph "🎯 Cross-Domain Proof"
-        API[Coin Data API Platform<br/>비게임 도메인 적용]
+        API[Coin Data API Platform<br/>금융/핀테크 도메인]
     end
     
     subgraph "🧩 Supporting"
@@ -96,7 +96,7 @@ graph TB
 - Zone 기반 수평 확장, Redis Hot / MongoDB Cold Snapshot
 - Unity 클라이언트 ↔ C# 서버 ↔ TypeScript 플랫폼 서버
 
-> “무엇을 만들었는가”보다 “어떤 판단으로 이 구조에 도달했는가” 강조
+> "무엇을 만들었는가"보다 "어떤 판단으로 이 구조에 도달했는가" 강조
 
 ```mermaid
 flowchart TD
@@ -133,39 +133,97 @@ flowchart TD
 
 👉 [portpolio_coindataapi](https://github.com/1985jwlee/portpolio_coindataapi)
 
-**동일한 설계 원칙의 비게임 도메인 적용 사례**
+**동일한 설계 원칙의 금융/핀테크 도메인 적용 사례**
+
+**핵심 구현**:
+- Binance WebSocket → REST API 실시간 데이터 플랫폼
+- 24개 암호화폐 선물 시장 데이터 수집 및 정규화
+- 26개 기술 지표 엔진 (RSI, MACD, Stochastic, Pivot 등)
+- 외부 API 스키마 변경으로부터 클라이언트 보호
+- 거래소 API 장애 시 캐시 기반 서비스 연속성 보장
 
 ```mermaid
-graph LR
-    subgraph "핵심 원칙"
-        P[외부 격리<br/>정규화<br/>계약 안정성<br/>비동기 처리]
+graph TB
+    subgraph "External Sources"
+        WS[Binance WebSocket<br/>실시간 시세]
     end
     
-    subgraph "게임 서버"
-        G[실시간 게임<br/>Domain Events<br/>Kafka Stream]
+    subgraph "Ingestion Layer"
+        Mgr[BinanceSocketKlineManager<br/>데이터 수집 및 Queue 관리]
     end
     
-    subgraph "데이터 플랫폼"
-        D[외부 API<br/>Schema 정규화<br/>WebSocket Stream]
+    subgraph "Processing Layer"
+        Norm[Schema Normalizer<br/>IBinanceKline 표준화]
+        Calc[Technical Indicator Engine<br/>26개 지표 계산]
     end
     
-    P --> G
-    P --> D
+    subgraph "Cache Layer"
+        Cache[(RxConcurrentDictionary<br/>In-Memory Cache)]
+    end
     
-    style P fill:#4A90E2,color:#fff,stroke-width:3px
+    subgraph "API Layer"
+        API[REST API Server<br/>WatsonWebserver]
+    end
+    
+    WS -->|Raw Data| Mgr
+    Mgr -->|Queue| Norm
+    Norm --> Calc
+    Calc --> Cache
+    Cache --> API
+    API -->|JSON| Client[Trading Clients]
+    
+    style Norm fill:#4A90E2,color:#fff
+    style Calc fill:#FFA07A,color:#fff
+    style Cache fill:#2ECC71,color:#fff
 ```
 
 #### 원칙 적용 비교
 
 |원칙        |게임 서버 (Main)      |Coin API Platform             |
 |----------|------------------|------------------------------|
-|**외부 격리** |DB 장애 시 게임 진행     |거래소 API 장애 시 제한 제공            |
+|**외부 격리** |DB 장애 시 게임 진행     |거래소 API 장애 시 캐시 제공            |
 |**정규화 계층**|Event → DB Schema |External API → Internal Schema|
 |**계약 안정성**|운영 API 불변         |클라이언트 API 불변                  |
-|**비동기 처리**|Kafka Event Stream|WebSocket Stream              |
+|**비동기 처리**|Kafka Event Stream|WebSocket → Queue → Cache              |
+|**실시간 처리**|GameLoop Tick (50ms)|1분 주기 지표 갱신 (지연 허용)|
+|**장애 복구**|Hot/Cold Snapshot|In-Memory Cache + 자동 재연결|
 
+#### API 엔드포인트
 
-> **핵심 메시지**: “설계 원칙은 도메인을 넘어 일반화 가능합니다”
+```bash
+# 종합 지표 조회
+GET /api/v1/summary?symbol=BTCUSDT&interval=1m
+
+# 오실레이터 지표
+GET /api/v1/oscillators?symbol=ETHUSDT&interval=5m
+
+# 이동평균 지표
+GET /api/v1/moving_averages?symbol=ADAUSDT&interval=15m
+
+# 피봇 포인트
+GET /api/v1/pivots?symbol=SOLUSDT&interval=1h&period=14
+```
+
+#### 금융/트레이딩 도메인 확장성
+
+이 프로젝트는 다음 금융 서비스로 확장 가능합니다:
+
+**트레이딩 플랫폼**:
+- 자동 매매 시스템의 지표 데이터 소스
+- 백테스팅 엔진의 시장 데이터 제공
+- 실시간 시그널 생성 서비스
+
+**리스크 관리**:
+- 포트폴리오 리밸런싱 지표
+- 변동성 모니터링 시스템
+- 시장 트렌드 분석 대시보드
+
+**데이터 분석**:
+- 기술 지표 상관관계 분석
+- 시장 패턴 인식 ML 모델 훈련 데이터
+- 실시간 시장 센티멘트 분석
+
+> **핵심 메시지**: "설계 원칙은 도메인을 넘어 일반화 가능합니다"
 
 -----
 
@@ -194,6 +252,7 @@ graph LR
 - ✅ 이벤트 기반 비동기 파이프라인 설계
 - ✅ 확장 시 병목·장애 포인트 식별
 - ✅ **도메인 독립적 설계 원칙 수립**
+- ✅ 외부 의존성 격리 전략
 - ✅ 기술 기준 정립 및 문서화
 - ✅ 복잡한 구조를 설명 가능하게 정리
 
@@ -202,7 +261,7 @@ graph LR
 ## 📧 Contact
 
 **GitHub**: [@1985jwlee](https://github.com/1985jwlee)  
-**Email**: `[leejae.w.jl@icloud.com]`
+**Email**: leejae.w.jl@icloud.com
 
 > 💡 포트폴리오에 대한 질문이나 피드백은 각 저장소의 Issues를 활용해주세요.
 
@@ -212,4 +271,5 @@ graph LR
 
 - 단순 기술 나열이 아닌 설계 판단의 축적 강조
 - 각 저장소는 독립적 결과물이면서 하나의 설계 철학으로 연결
-- **게임과 비게임 도메인에 동일한 원칙 적용 가능**
+- **게임, 금융, 데이터 플랫폼 도메인에 동일한 원칙 적용 가능**
+- 실무 적용 가능한 아키텍처 패턴과 트레이드오프 이해
