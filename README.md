@@ -1,140 +1,108 @@
-# JW Lee | System-centered Engineer
+# 📌 Portfolio Overview
 
-**Real-time & Event-driven Architecture**
+이 저장소는 개별 프로젝트의 나열이 아닌,  
+서로 다른 도메인에서 반복적으로 등장한 **설계 판단과 사고 방식**을 정리한 포트폴리오입니다.
 
------
+🎮 게임 클라이언트  
+🖥️ 프론트엔드  
+🛠️ 백엔드  
+🌐 IoT 플랫폼  
 
-## 🏆 Executive Summary
+기술 스택과 도메인은 달라졌지만,  
+각 프로젝트는 공통적으로  
+📐 **복잡도를 어디서 제어할 것인가**  
+🧩 **책임을 어떻게 분리할 것인가**에 대한 고민을 기반으로 설계되었습니다.
 
-- 실시간·이벤트 기반 시스템 중심 설계 엔지니어
-- Unity 클라이언트 → 서버 권한 구조(Server-authoritative) → 이벤트 기반 확장 시스템 경험
-- 프로덕션 레벨 IoT 백엔드 아키텍처 설계 및 구현 경험
+---
 
------
+## 🧭 Portfolio Direction
 
-## 🎯 Career Perspective
+이 포트폴리오는 특정 기술이나 구현 결과보다,  
+각 시점에서 **어떤 선택지를 비교했고 어떤 기준으로 판단했는지**에 초점을 둡니다.
 
-- 초기: 클라이언트 중심 개발 → 실시간 시스템 한계 체감
-- 현재: 서버 권한 구조 & 이벤트 기반 아키텍처 설계
-- 목표: 설계 판단과 운영 가능성을 증명하는 시스템 엔지니어
+모든 프로젝트는 요구사항, 운영 환경, 리스크 조건에 따라  
+서로 다른 구조와 우선순위를 가졌으며,  
+그 차이 자체가 다음 프로젝트의 설계 기준으로 이어졌습니다.
 
------
+---
 
-## 🚩 Flagship Portfolio
+## 🏗️ Flagship Project
 
-**Server-authoritative & Event-driven Game / Platform Architecture**  
-👉 [portpolio_main](https://github.com/1985jwlee/portpolio_main)
+### 🚦 Smart Road Watering System – IoT Backend  
+🔗 https://github.com/1985jwlee/production-iot-backend
 
-### 시스템 아키텍처
+실제 운영 환경을 전제로 설계된 IoT 백엔드 시스템입니다.  
+장비 오류, 네트워크 불안정, 부분 장애를 **기본 조건**으로 두고 구조를 설계했습니다.
 
-```mermaid
-graph TB
-    subgraph "Client"
-        UC[Unity Client<br/>Server-authoritative]
-    end
-    
-    subgraph "Game Server - C#"
-        GS[Game Server<br/>TCP + GameLoop<br/>Memory State]
-    end
-    
-    subgraph "Event Stream"
-        KF[Kafka<br/>Event Bus]
-    end
-    
-    subgraph "Platform - TypeScript"
-        PS[Platform Server<br/>Bun.js + Elysia]
-    end
-    
-    subgraph "Storage"
-        RD[(Redis<br/>Hot Snapshot)]
-        MG[(MongoDB<br/>Cold Snapshot)]
-        MY[(MySQL<br/>Persistent)]
-    end
-    
-    UC -->|Command<br/>Request| GS
-    GS -->|Response| UC
-    GS -.->|Domain Event<br/>Fire-and-Forget| KF
-    KF --> PS
-    PS -->|Sync Write| MY
-    GS -.->|Async Save| RD
-    GS -.->|Async Save| MG
-    RD -.->|Recovery| GS
-    MG -.->|Recovery| GS
-    
-    style UC fill:#e1f5ff
-    style GS fill:#fff4e1
-    style KF fill:#f0e1ff
-    style PS fill:#e1ffe1
-    style RD fill:#ffe1e1
-    style MG fill:#ffe1e1
-    style MY fill:#ffe1e1
-```
+이 프로젝트에서는 즉각적인 제어 응답성보다  
+운영 안정성, 장애 격리, 시스템 복원력을 우선했습니다.  
 
-핵심 포인트:
+메시지 기반 처리와 책임 분리를 통해  
+장애가 전체 시스템으로 확산되지 않도록 설계하는 데 중점을 두었습니다.
 
-- 캐주얼 실시간 게임 기반 → MMO/플랫폼 확장 가능
-- Server-authoritative 실시간 판정 / Kafka 이벤트 스트림
-- 실시간 판정 ↔ 비동기 기록 분리
-- Zone 기반 수평 확장, Redis Hot / MongoDB Cold Snapshot
-- Unity 클라이언트 ↔ C# 서버 ↔ bun.js/Elysia 플랫폼 서버
+---
 
-> “무엇을 만들었는가”보다 “어떤 판단으로 이 구조에 도달했는가” 강조
+## 💱 Data Platform Project
 
------
+### Coin Data API  
+🔗 https://github.com/1985jwlee/portpolio_coindataapi
 
-## 🧩 Supporting Portfolios
+외부 API에 의존하는 데이터 수집 및 제공 플랫폼입니다.  
+데이터의 완전한 실시간성보다,  
+서비스의 지속 가능성과 운영 안정성을 중심으로 구조를 설계했습니다.
 
-### 🏭 Production-level Projects
+캐시, 비동기 처리, 장애 격리 전략을 통해  
+외부 서비스 장애가 내부 시스템에 미치는 영향을 최소화하는 것을 목표로 했습니다.
 
-- 🌡️ **[Smart Road Watering System Backend](https://github.com/1985jwlee/production-iot-backend)** – 프로덕션 레벨 IoT 백엔드 아키텍처
-  - **핵심**: PLC 장비 실시간 제어, 다중 사이트 관리, 고가용성 설계
-  - **기술**: Bun.js, TypeScript, ElysiaJS, Drizzle ORM
-  - **패턴**: Adapter Pattern (PLC 추상화), Repository Pattern, DI, Event-driven, Semaphore
-  - **인프라**: MySQL + MongoDB + Redis, Kafka, WebSocket
-  - **최적화**: 콜드 스타트 70% 감소, API 응답 20% 개선, 메모리 30% 절감
+---
 
-### 🎮 Game & Real-time Systems
+## 🎮 Game Development Experience
 
-- 🎨 **Client Rendering:** [Shader Experiments](https://github.com/1985jwlee/portpolio_shader) – GPU, 프레임 단위 사고 이해
-- 🎮 **Real-time Game:** [Vampire Survival](https://github.com/1985jwlee/portpolio_vampiresurvival) – 실시간 루프·상태 관리 경험
+### Vampire Survival (Unity)  
+🔗 https://github.com/1985jwlee/portpolio_vampiresurvival  
+🔗 https://github.com/1985jwlee/portpolio_shader
 
-### 📊 Data & Platform
+게임 개발 경험은 실시간 처리, 상태 관리, 사용자 체감에 대한 이해를 제공했습니다.  
+프레임 단위 사고와 즉각적인 피드백 구조는  
+이후 서버 및 플랫폼 설계에서 처리 우선순위를 판단하는 기준이 되었습니다.
 
-- 📊 **Data Pipeline:** [Coin Data API](https://github.com/1985jwlee/portpolio_coindataapi) – 이벤트 기반 API & 운영 경험
-- 💻 **Frontend Literacy:** [React Experiments](https://github.com/1985jwlee/portpolio_react) – 전체 시스템 흐름 이해용
+---
 
-> Supporting 포트폴리오는 메인 포트폴리오의 설계 판단을 뒷받침
+## 🖥️ Frontend Experience
 
------
+### React SPA Portfolio  
+🔗 https://github.com/1985jwlee/portpolio_react
 
-## 💡 What I Do Well
+프론트엔드 개발 경험을 통해  
+API를 단순한 구현이 아닌 **계약**의 관점에서 바라보게 되었습니다.
 
-### 아키텍처 설계
+상태 표현, 에러 처리, 비동기 흐름에 대한 이해는  
+백엔드 설계 시 인터페이스 안정성과 책임 분리를 더욱 중요하게 고려하게 만든 배경이 되었습니다.
 
-- 실시간 시스템 아키텍처 설계
-- Server-authoritative 구조 설계
-- 이벤트 기반 비동기 파이프라인 설계
-- 확장 시 병목·장애 포인트 식별
+---
 
-### 프로덕션 레벨 설계
+## 🧩 Common Architecture Themes
 
-- 고가용성 시스템 아키텍처 설계
-- 다중 프로토콜 통신 구현 (Modbus TCP, WebSocket, REST)
-- 동시성 제어 및 성능 최적화
-- 실무 환경 고려한 설계 (테스트 가능성, 확장성)
+모든 프로젝트에 동일한 구조를 적용하지는 않았지만,  
+다음과 같은 기준은 반복적으로 등장했습니다.
 
-### 엔지니어링
+- 책임 분리와 명확한 경계 설정  
+- 장애 전파 최소화  
+- 계약(API / 인터페이스) 중심 설계  
+- 운영과 유지보수를 고려한 구조  
 
-- 기술 기준 정립 및 문서화
-- 복잡한 구조를 설명 가능하게 정리
-- 디자인 패턴의 실무적 적용
+이 기준들은 도메인에 따라 다르게 적용되었으며,  
+그 과정에서 얻은 경험이 다음 프로젝트의 설계 판단으로 이어졌습니다.
 
------
+---
 
-## 🔗 Closing
+## 🧠 Closing
 
-- 단순 기술 나열이 아닌 설계 판단의 축적 강조
-- 각 저장소는 독립적 결과물이면서 하나의 설계 철학으로 연결
-- 프로덕션 레벨 프로젝트와 포트폴리오의 유기적 연계
+이 포트폴리오는  
+특정 기술이나 도메인을 증명하기 위한 기록이 아니라,  
 
------
+서로 다른 환경과 요구사항 속에서  
+**어떤 기준으로 구조를 선택하고 판단해왔는지**를 정리한 요약입니다.
+
+각 프로젝트는 독립적인 결과물이면서 동시에,  
+다음 선택을 위한 판단 근거로 연결되어 있습니다.
