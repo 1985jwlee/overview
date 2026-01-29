@@ -74,6 +74,108 @@ graph TB
     style MY fill:#ffe1e1
 ```
 
+## 🎯 Cross-Domain Application
+
+### 📊 Coin Data API Platform
+
+👉 [portpolio_coindataapi](https://github.com/1985jwlee/portpolio_coindataapi)
+
+**동일한 설계 원칙의 금융/핀테크 도메인 적용 사례**
+
+**핵심 구현**:
+- Binance WebSocket → REST API 실시간 데이터 플랫폼
+- 24개 암호화폐 선물 시장 데이터 수집 및 정규화
+- 26개 기술 지표 엔진 (RSI, MACD, Stochastic, Pivot 등)
+- 외부 API 스키마 변경으로부터 클라이언트 보호
+- 거래소 API 장애 시 캐시 기반 서비스 연속성 보장
+
+```mermaid
+graph TB
+    subgraph "External Sources"
+        WS[Binance WebSocket<br/>실시간 시세]
+    end
+    
+    subgraph "Ingestion Layer"
+        Mgr[BinanceSocketKlineManager<br/>데이터 수집 및 Queue 관리]
+    end
+    
+    subgraph "Processing Layer"
+        Norm[Schema Normalizer<br/>IBinanceKline 표준화]
+        Calc[Technical Indicator Engine<br/>26개 지표 계산]
+    end
+    
+    subgraph "Cache Layer"
+        Cache[(RxConcurrentDictionary<br/>In-Memory Cache)]
+    end
+    
+    subgraph "API Layer"
+        API[REST API Server<br/>WatsonWebserver]
+    end
+    
+    WS -->|Raw Data| Mgr
+    Mgr -->|Queue| Norm
+    Norm --> Calc
+    Calc --> Cache
+    Cache --> API
+    API -->|JSON| Client[Trading Clients]
+    
+    style Norm fill:#4A90E2,color:#fff
+    style Calc fill:#FFA07A,color:#fff
+    style Cache fill:#2ECC71,color:#fff
+```
+
+#### 원칙 적용 비교
+
+|원칙        |게임 서버 (Main)      |Coin API Platform             |
+|----------|------------------|------------------------------|
+|**외부 격리** |DB 장애 시 게임 진행     |거래소 API 장애 시 캐시 제공            |
+|**정규화 계층**|Event → DB Schema |External API → Internal Schema|
+|**계약 안정성**|운영 API 불변         |클라이언트 API 불변                  |
+|**비동기 처리**|Kafka Event Stream|WebSocket → Queue → Cache              |
+|**실시간 처리**|GameLoop Tick (50ms)|1분 주기 지표 갱신 (지연 허용)|
+|**장애 복구**|Hot/Cold Snapshot|In-Memory Cache + 자동 재연결|
+
+#### API 엔드포인트
+
+```bash
+# 종합 지표 조회
+GET /api/v1/summary?symbol=BTCUSDT&interval=1m
+
+# 오실레이터 지표
+GET /api/v1/oscillators?symbol=ETHUSDT&interval=5m
+
+# 이동평균 지표
+GET /api/v1/moving_averages?symbol=ADAUSDT&interval=15m
+
+# 피봇 포인트
+GET /api/v1/pivots?symbol=SOLUSDT&interval=1h&period=14
+```
+
+#### 금융/트레이딩 도메인 확장성
+
+이 프로젝트는 다음 금융 서비스로 확장 가능합니다:
+
+**트레이딩 플랫폼**:
+- 자동 매매 시스템의 지표 데이터 소스
+- 백테스팅 엔진의 시장 데이터 제공
+- 실시간 시그널 생성 서비스
+
+**리스크 관리**:
+- 포트폴리오 리밸런싱 지표
+- 변동성 모니터링 시스템
+- 시장 트렌드 분석 대시보드
+
+**데이터 분석**:
+- 기술 지표 상관관계 분석
+- 시장 패턴 인식 ML 모델 훈련 데이터
+- 실시간 시장 센티멘트 분석
+
+> **핵심 메시지**: "설계 원칙은 도메인을 넘어 일반화 가능합니다"
+
+-----
+
+## 🏭 Production‑Level Backend Systems
+
 ---
 
 ## 🚀 Supporting Portfolios
@@ -81,8 +183,6 @@ graph TB
 이 섹션은 메인 아키텍처를 뒷받침하는 프로젝트들입니다. 각 저장소는 기술적 판단과 실전 설계 역량을 보여줍니다.
 
 ---
-
-## 🏭 Production‑Level Backend Systems
 
 ### 📌 Smart Road Watering System — **Production‑Level IoT Backend Architecture**  
 - **리포지토리:** `production‑iot‑backend`  
