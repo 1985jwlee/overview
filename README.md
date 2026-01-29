@@ -1,31 +1,35 @@
-# JW Lee | System-centered Engineer
+# JW Lee | System‑Centered Engineer  
+**Real‑time & Event‑driven Architecture · Production‑Ready Systems**
 
-**Real-time & Event-driven Architecture**
+---
 
------
+## 📌 Executive Summary
 
-## 🏆 Executive Summary
+- 실시간·이벤트 기반 시스템 중심 설계 엔지니어  
+- Unity 클라이언트 → 서버 권한 구조 (Server‑authoritative) → 이벤트 기반 확장 시스템 경험  
+- **프로덕션 레벨 IoT 백엔드 아키텍처 설계 및 구현 경험**  
+- 다수 플랫폼, 백엔드, 실시간 시스템 설계 및 실행 역량
 
-- 실시간·이벤트 기반 시스템 중심 설계 엔지니어
-- Unity 클라이언트 → 서버 권한 구조(Server-authoritative) → 이벤트 기반 확장 시스템 경험
-- 프로덕션 레벨 IoT 백엔드 아키텍처 설계 및 구현 경험
+---
 
------
+## 📈 Career Perspective
 
-## 🎯 Career Perspective
-
-- 초기: 클라이언트 중심 개발 → 실시간 시스템 한계 체감
-- 현재: 서버 권한 구조 & 이벤트 기반 아키텍처 설계
+- 초기: 클라이언트 중심 개발 → 실시간 시스템 확장성 한계 체감  
+- 현재: 서버 권한 구조 및 이벤트 기반 아키텍처 중심 설계  
 - 목표: 설계 판단과 운영 가능성을 증명하는 시스템 엔지니어
 
------
+---
 
-## 🚩 Flagship Portfolio
+## ⭐ Flagship Portfolio
 
-**Server-authoritative & Event-driven Game / Platform Architecture**  
-👉 [portpolio_main](https://github.com/1985jwlee/portpolio_main)
+### 1. Server‑authoritative & Event‑driven Game / Platform Architecture  
+- **리포지토리:** `portpolio_main`  
+- **핵심 포인트:**  
+  - Unity 클라이언트 기반 실시간 플레이  
+  - C# 게임 서버 및 Kafka 이벤트 스트림 아키텍처  
+  - Redis Hot / MongoDB Cold Snapshot 기반 상태 복구
 
-### 시스템 아키텍처
+메인 아키텍처 도식:
 
 ```mermaid
 graph TB
@@ -70,71 +74,160 @@ graph TB
     style MY fill:#ffe1e1
 ```
 
-핵심 포인트:
+---
 
-- 캐주얼 실시간 게임 기반 → MMO/플랫폼 확장 가능
-- Server-authoritative 실시간 판정 / Kafka 이벤트 스트림
-- 실시간 판정 ↔ 비동기 기록 분리
-- Zone 기반 수평 확장, Redis Hot / MongoDB Cold Snapshot
-- Unity 클라이언트 ↔ C# 서버 ↔ bun.js/Elysia 플랫폼 서버
+## 🚀 Supporting Portfolios
 
-> “무엇을 만들었는가”보다 “어떤 판단으로 이 구조에 도달했는가” 강조
+이 섹션은 메인 아키텍처를 뒷받침하는 프로젝트들입니다. 각 저장소는 기술적 판단과 실전 설계 역량을 보여줍니다.
 
------
+---
 
-## 🧩 Supporting Portfolios
+## 🏭 Production‑Level Backend Systems
 
-### 🏭 Production-level Projects
+### 📌 Smart Road Watering System — **Production‑Level IoT Backend Architecture**  
+- **리포지토리:** `production‑iot‑backend`  
+- **핵심 역할:** 프로덕션 환경에서 동작하는 IoT 백엔드 아키텍처 설계 및 구현  
+- **핵심 목표:** PLC 기반 실시간 물 분사 제어, 자동 의사결정, 다중 사이트 동시 운영  
 
-- 🌡️ **[Smart Road Watering System Backend](https://github.com/1985jwlee/production-iot-backend)** – 프로덕션 레벨 IoT 백엔드 아키텍처
-  - **핵심**: PLC 장비 실시간 제어, 다중 사이트 관리, 고가용성 설계
-  - **기술**: Bun.js, TypeScript, ElysiaJS, Drizzle ORM
-  - **패턴**: Adapter Pattern (PLC 추상화), Repository Pattern, DI, Event-driven, Semaphore
-  - **인프라**: MySQL + MongoDB + Redis, Kafka, WebSocket
-  - **최적화**: 콜드 스타트 70% 감소, API 응답 20% 개선, 메모리 30% 절감
+---
 
-### 🎮 Game & Real-time Systems
+### 📋 프로젝트 개요
 
-- 🎨 **Client Rendering:** [Shader Experiments](https://github.com/1985jwlee/portpolio_shader) – GPU, 프레임 단위 사고 이해
-- 🎮 **Real-time Game:** [Vampire Survival](https://github.com/1985jwlee/portpolio_vampiresurvival) – 실시간 루프·상태 관리 경험
+도시 표면 온도 상승 및 미세먼지 저감을 위한 **지능형 도로 살수 시스템**을 위한 백엔드입니다. 주요 요구사항:
 
-### 📊 Data & Platform
+- PLC 장비 기반 실시간 제어  
+- 기상/환경 데이터 기반 자동화 판단  
+- 다수 현장 (10+ 지역) 동시 운영  
+- 실시간 모니터링 및 장애 알림  
+- 높은 가용성 요구
 
-- 📊 **Data Pipeline:** [Coin Data API](https://github.com/1985jwlee/portpolio_coindataapi) – 이벤트 기반 API & 운영 경험
-- 💻 **Frontend Literacy:** [React Experiments](https://github.com/1985jwlee/portpolio_react) – 전체 시스템 흐름 이해용
+이 프로젝트는 **IoT 환경의 실시간 통신/제어와 고가용성 백엔드 설계** 요구를 기반으로 구성되었습니다. ([github.com](https://github.com/1985jwlee/production-iot-backend))
 
-> Supporting 포트폴리오는 메인 포트폴리오의 설계 판단을 뒷받침
+---
 
------
+## 🧠 시스템 아키텍처
 
-## 💡 What I Do Well
+### 📊 전체 시스템 구조
+
+```text
+Client (Web / Mobile)
+   ↓ HTTPS / WSS
+API Gateway (Nginx)
+   ↓
+Backend Services (Bun.js + Elysia)
+   ↓
+DB / Cache / Message Bus
+   - MySQL
+   - MongoDB
+   - Redis
+   - Kafka
+   ↓
+PLC Adapter (Modbus TCP)
+   ↓
+Field PLC Devices
+```
+
+이 계층형 구조는 **책임 분리, 확장성, 장애 격리**를 염두에 두고 설계되었습니다. ([github.com](https://github.com/1985jwlee/production-iot-backend))
+
+---
+
+## 🛠️ 핵심 설계 패턴
+
+### 1) 모듈 기반 분할
+
+- 인증/인가 서비스  
+- 실시간 제어 서비스 (WebSocket)  
+- PLC 통신 추상화 Adapter  
+- 자동화 판단 서비스  
+- Repository & DI 기반 구성 ([github.com](https://github.com/1985jwlee/production-iot-backend))
+
+### 2) 이벤트 및 비동기 중심 처리
+
+- 메시지 기반 Kafka 스트리밍  
+- 비동기 처리로 **확장성 및 반응성 보강** ([github.com](https://github.com/1985jwlee/production-iot-backend))
+
+---
+
+## 🧪 기술 스택
+
+| 계층 | 기술 |
+|------|------|
+| 서버 | Bun.js, ElysiaJS (TypeScript) |
+| DB | MySQL, MongoDB |
+| 캐시 | Redis |
+| 메시징 | Kafka |
+| 장비 통신 | Modbus TCP |
+| 통신 | WebSocket, REST | ([github.com](https://github.com/1985jwlee/production-iot-backend))
+
+---
+
+## 📌 성능 및 운영 고려
+
+- API 성능 최적화  
+- 콜드 스타트 감소 및 응답성 향상  
+- 메모리 최적화  
+- 오류 격리 및 장애 대응 설계  
+- 99.9% 이상 가용성 목표 ([github.com](https://github.com/1985jwlee/production-iot-backend))
+
+---
+
+## 🧩 Technical Decisions
+
+1. **Bun.js + Elysia**  
+   - 고성능 I/O 처리 및 빠른 응답  
+2. **Kafka 기반 이벤트 스트림**  
+   - 확장성과 안정성 확보  
+3. **분리된 모듈 구조**  
+   - 장애 격리 및 유지보수성 확보 ([github.com](https://github.com/1985jwlee/production-iot-backend))
+
+---
+
+## 🎮 Game & Real‑time Systems
+
+- **Shader Experiments** — GPU, 프레임 기반 사고 강화  
+- **Vampire Survival** — 실시간 루프/상태 관리 경험
+
+---
+
+## 📊 Data & Platform
+
+- **Coin Data API** — 이벤트 기반 API 서비스  
+- **React Experiments** — 프론트엔드 문법 이해 및 전체 시스템 흐름 경험
+
+---
+
+## 🚀 What I Do Well
 
 ### 아키텍처 설계
 
-- 실시간 시스템 아키텍처 설계
-- Server-authoritative 구조 설계
-- 이벤트 기반 비동기 파이프라인 설계
-- 확장 시 병목·장애 포인트 식별
+- 실시간 시스템 아키텍처  
+- Server‑authoritative 구조  
+- 이벤트 기반 비동기 파이프라인  
+- 병목점 및 장애 포인트 식별
 
-### 프로덕션 레벨 설계
+### Production‑Ready Design
 
-- 고가용성 시스템 아키텍처 설계
-- 다중 프로토콜 통신 구현 (Modbus TCP, WebSocket, REST)
+- 고가용성 시스템 아키텍처 설계  
+- 프로토콜 통합 (Modbus TCP, WebSocket, REST)  
 - 동시성 제어 및 성능 최적화
-- 실무 환경 고려한 설계 (테스트 가능성, 확장성)
 
 ### 엔지니어링
 
-- 기술 기준 정립 및 문서화
-- 복잡한 구조를 설명 가능하게 정리
-- 디자인 패턴의 실무적 적용
+- 기술 기준 수립 및 문서화  
+- 복잡 구조의 명확한 설명  
+- 디자인 패턴의 실전적용
 
------
+---
 
-## 🔗 Closing
+## 🏁 Closing Thoughts
 
-- 단순 기술 나열이 아닌 설계 판단의 축적 강조
-- 각 저장소는 독립적 결과물이면서 하나의 설계 철학으로 연결
-- 프로덕션 레벨 프로젝트와 포트폴리오의 유기적 연계
+단순 기능 나열이 아닌 **설계 판단과 운영 관점의 설계 역량**을 중심으로 각 저장소는 연결되어 있습니다.  
+IoT 백엔드 및 실시간 시스템 아키텍처 경험을 통해 **복잡한 문제 해결 역량**을 입증합니다.
 
------
+---
+
+## 📎 Project Links
+
+- Main Architecture: `portpolio_main`  
+- IoT Backend: `production‑iot‑backend`  
+- Other Supporting Repos: Shader Experiments, Vampire Survival, Coin Data API, React Experiments
