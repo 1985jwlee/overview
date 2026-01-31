@@ -276,13 +276,78 @@ graph LR
 - Event-driven Architecture (Kafka)
 - Semaphore Pattern (동시성 제어)
 
+**실무에서 해결한 기술적 챌린지:**
+
+<details>
+<summary><b>1️⃣ WebSocket 연결 안정성</b> - 모바일 환경 네트워크 불안정 대응</summary>
+
+**문제:** 네트워크 전환 시 연결 끊김, 좀비 연결, 재연결 폭풍
+
+**해결:**
+- Application-level Heartbeat (30s ping / 90s pong timeout)
+- Exponential Backoff 재연결 (1s → 2s → 4s → ... → max 30s + jitter)
+
+**결과:**
+- 평균 연결 유지: 5분 → 2시간+
+- 좀비 연결: 10-15% → <1%
+- 재연결 성공률: 60% → 95%
+</details>
+
+<details>
+<summary><b>2️⃣ 동시성 제어</b> - FFmpeg 이미지 처리 병목 해결</summary>
+
+**문제:** 10개 사이트 동시 캡처 → CPU 100%, OOM 에러
+
+**해결:**
+- Semaphore Pattern (최대 3개만 동시 실행)
+- 이미지 최적화 (4K→1920x1080, JPEG→WebP)
+- 타임아웃 설정 (10초)
+
+**결과:**
+- CPU: 100% → 35%
+- 메모리: 2GB (OOM) → 600MB
+- 이미지 크기: 2.5MB → 800KB
+</details>
+
+<details>
+<summary><b>3️⃣ PLC 통신 추상화</b> - 개발 환경 격리</summary>
+
+**문제:** 실제 PLC 없이 개발 불가능, 제조사별 프로토콜 차이
+
+**해결:**
+- Adapter Pattern으로 IPLCReader/IPLCWriter 인터페이스 정의
+- FakePLCAdapter로 시뮬레이션 (현실적인 랜덤 데이터)
+- Factory Pattern으로 환경별 자동 선택
+
+**결과:**
+- PLC 없이 전체 시스템 개발 가능
+- 테스트 환경 구축: 2일 → 10분
+- 새 제조사 PLC 추가 시 새 어댑터만 구현
+</details>
+
+<details>
+<summary><b>4️⃣ 실시간 데이터 동기화</b> - HTTP Polling → WebSocket + Kafka</summary>
+
+**문제:** HTTP Polling의 비효율 (불필요한 요청, 5초 지연)
+
+**해결:**
+- WebSocket + Kafka 이벤트 스트림
+- 선택적 브로드캐스트 (토픽 구독 방식)
+- Kafka 오프셋 관리로 데이터 유실 방지
+
+**결과:**
+- 지연 시간: 0-5초 → <100ms
+- CPU 사용률: 40% → 15%
+- 네트워크: 10MB/min → 1MB/min
+- 확장성: 100 → 10,000+ clients
+</details>
+
 **기술 스택:** Bun.js + TypeScript + ElysiaJS + Drizzle ORM + Kafka + WebSocket
 
 **상세 문서:**
 - 🏗️ [System Architecture](https://github.com/1985jwlee/production-iot-backend#-system-architecture)
 - 🎨 [Design Patterns](https://github.com/1985jwlee/production-iot-backend#-core-design-patterns)
-- ⚡ [Performance Optimization](https://github.com/1985jwlee/production-iot-backend#-performance-optimization)
-- 🔧 [Technical Challenges](https://github.com/1985jwlee/production-iot-backend/blob/main/TECHNICAL_CHALLENGES.md)
+- 🔧 [Technical Challenges](https://github.com/1985jwlee/production-iot-backend/blob/main/TECHNICAL_CHALLENGES.md) ⭐ **실무 구현 경험 상세**
 
 ---
 
