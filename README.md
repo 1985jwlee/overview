@@ -115,26 +115,26 @@ graph LR
     IOT["🌡️ Production IoT Backend<br/>실무 IoT 아키텍처 · 보안 · 성능"]
     SHADER["🎨 Shader Experiments<br/>GPU · 프레임 단위 사고"]
     VAMPIRE["🎮 Vampire Survival<br/>실시간 루프 · 상태 관리"]
-    COIN["📊 Coin Data API<br/>이벤트 기반 API · 운영"]
+    COIN["📊 Coin Data API<br/>직접 구현한 DI · 웹서버 · 데이터 파이프라인"]
     REACT["💻 React Experiments<br/>전체 시스템 흐름 이해"]
 
     IOT -->|프로덕션 레벨 설계 판단| MAIN
     SHADER -->|렌더링 최적화 이해| MAIN
     VAMPIRE -->|실시간 구조 체감| MAIN
-    COIN -->|이벤트 파이프라인 경험| MAIN
+    COIN -->|DI · 파이프라인 설계 구현력| MAIN
     REACT -->|클라이언트↔서버 흐름 이해| MAIN
 
     style MAIN fill:#2c3e50,color:#fff
     style IOT fill:#1a6b3c,color:#fff
 ```
 
-|포트폴리오                       |링크                                                                           |역할                          |
-|----------------------------|-----------------------------------------------------------------------------|----------------------------|
-|🌡️ **Production IoT Backend**|[production-iot-backend](https://github.com/1985jwlee/production-iot-backend)|실무 IoT 시스템 · 마이크로서비스 · 보안 설계|
-|🎨 Client Rendering          |[Shader Experiments](https://github.com/1985jwlee/portpolio_shader)          |GPU, 프레임 단위 사고 이해           |
-|🎮 Real-time Game            |[Vampire Survival](https://github.com/1985jwlee/portpolio_vampiresurvival)   |실시간 루프·상태 관리 경험             |
-|📊 Data Pipeline             |[Coin Data API](https://github.com/1985jwlee/portpolio_coindataapi)          |이벤트 기반 API & 운영 경험          |
-|💻 Frontend Literacy         |[React Experiments](https://github.com/1985jwlee/portpolio_react)            |전체 시스템 흐름 이해                |
+|포트폴리오                       |링크                                                                           |역할                                      |
+|----------------------------|-----------------------------------------------------------------------------|----------------------------------------|
+|🌡️ **Production IoT Backend**|[production-iot-backend](https://github.com/1985jwlee/production-iot-backend)|실무 IoT 시스템 · 마이크로서비스 · 보안 설계            |
+|🎨 Client Rendering          |[Shader Experiments](https://github.com/1985jwlee/portpolio_shader)          |GPU, 프레임 단위 사고 이해                       |
+|🎮 Real-time Game            |[Vampire Survival](https://github.com/1985jwlee/portpolio_vampiresurvival)   |실시간 루프·상태 관리 경험                         |
+|📊 **Coin Data API**         |[portpolio_coindataapi](https://github.com/1985jwlee/portpolio_coindataapi)  |DI 컨테이너 · 웹서버 프레임워크 직접 구현 · 외부 데이터 파이프라인|
+|💻 Frontend Literacy         |[React Experiments](https://github.com/1985jwlee/portpolio_react)            |전체 시스템 흐름 이해                            |
 
 ### 🌡️ Production IoT Backend 상세
 
@@ -201,6 +201,79 @@ graph TB
 |Event-driven (Kafka)|서비스 간 비동기 통신       |장애 전파 차단, 비동기 처리          |
 |Multi-level Cache   |Memory → Redis → DB|L1 캐시 히트 시 마이크로초 응답       |
 
+### 📊 Coin Data API 상세
+
+**외부 데이터 파이프라인** — C#으로 DI 컨테이너와 웹서버 프레임워크를 직접 구현
+
+> 단순히 라이브러리를 “사용”하는 것을 넘어, 프레임워크가 **왜 그렇게 설계되었는지**를 직접 구현으로 증명한 프로젝트
+
+```mermaid
+graph TB
+    subgraph External["외부 데이터 소스"]
+        BINANCE[Binance WebSocket<br/>실시간 Kline 스트림]
+        OTHER[기타 거래소 API]
+    end
+
+    subgraph Ingestion["수집 계층 (C# / .NET)"]
+        SOCKET[BinanceSocketKlineManager<br/>WebSocket 연결 관리]
+        IEXCHANGE[IExchangeKlineManager<br/>거래소 추상 인터페이스]
+        SOCKET -->|구현| IEXCHANGE
+    end
+
+    subgraph Core["코어 인프라 (직접 구현)"]
+        DI[DIContainer<br/>직접 구현한 DI 컨테이너]
+        WEB[WebServerFramework<br/>직접 구현한 웹서버]
+        RX[RxConcurrentDictionary<br/>Reactive 동시성 딕셔너리]
+    end
+
+    subgraph Processing["처리 계층"]
+        DR[DataResource<br/>데이터 소스 추상화]
+        IND[Indicators<br/>기술 지표 계산 엔진]
+    end
+
+    subgraph Output["서비스 제공"]
+        API[REST API<br/>정규화된 데이터 제공]
+    end
+
+    BINANCE -->|WebSocket| SOCKET
+    OTHER --> IEXCHANGE
+    IEXCHANGE --> DR
+    DI -->|의존성 주입| SOCKET
+    DI -->|의존성 주입| DR
+    DI -->|의존성 주입| IND
+    DR --> RX
+    RX --> IND
+    IND --> API
+    WEB --> API
+
+    style DI fill:#8e44ad,color:#fff
+    style WEB fill:#8e44ad,color:#fff
+    style IEXCHANGE fill:#2980b9,color:#fff
+```
+
+**핵심 설계 판단:**
+
+|직접 구현한 것                     |이유              |얻은 것                |
+|-----------------------------|----------------|--------------------|
+|DI 컨테이너                      |프레임워크 내부 동작 이해  |의존성 그래프 · 생명주기 완전 제어|
+|웹서버 프레임워크                    |HTTP 파이프라인 원리 체득|미들웨어 · 라우팅 구조 깊은 이해 |
+|`IExchangeKlineManager` 인터페이스|거래소 교체 가능성 전제   |데이터 소스 변경 시 서비스 무영향 |
+|`RxConcurrentDictionary`     |동시성 + 반응형 데이터 필요|스레드 안전 + 변경 스트림 구독  |
+
+**장애 격리 설계:**
+
+```mermaid
+flowchart LR
+    A[Binance WebSocket 장애] -->|격리| B[DataResource 캐시 유지]
+    B --> C[API 정상 제공 유지]
+    D[거래소 스키마 변경] -->|흡수| E[IExchangeKlineManager 구현체만 수정]
+    E --> F[내부 표준 API 계약 유지]
+
+    style A fill:#e74c3c,color:#fff
+    style D fill:#e74c3c,color:#fff
+    style C fill:#27ae60,color:#fff
+    style F fill:#27ae60,color:#fff
+```
 
 > Supporting 포트폴리오는 독립 결과물이면서, 메인 포트폴리오의 **설계 판단을 뒷받침하는 근거**
 
@@ -223,6 +296,10 @@ mindmap
       Unity 클라이언트
       C# 게임 서버
       bun.js / ElysiaJS API
+    프레임워크 이해
+      DI 컨테이너 직접 구현
+      웹서버 파이프라인 구현
+      Reactive 동시성 설계
     운영 가능성
       수평 확장 설계
       Redis Hot / Cold 전략
