@@ -295,6 +295,53 @@ flowchart LR
 
 -----
 
+### 💻 React Experiments 상세
+
+**메인 포트폴리오 Admin Dashboard의 선행 기술 검증 프로토타입**
+
+> 서버에서 설계한 상태 관리·스냅샷·이벤트 개념을 "실제로 UI로 구현할 수 있는가"를 먼저 검증한 프로젝트입니다.  
+> 메인 포트폴리오의 핵심 개념을 React + Zustand로 동작하는 형태로 옮겨 증명했습니다.
+```mermaid
+graph LR
+    subgraph Server["Main Portfolio 서버 개념"]
+        S1[Game Server State<br/>In-memory]
+        S2[Redis Hot Snapshot]
+        S3[MongoDB Cold Snapshot]
+        S4[Event Sourcing<br/>단방향 흐름]
+    end
+
+    subgraph UI["React 포트폴리오 UI 구현"]
+        U1[Zustand Global Store<br/>Single Source of Truth]
+        U2[메모리 스냅샷<br/>이름 붙여 저장·전환]
+        U3[JSON Export / Import<br/>파일 직렬화]
+        U4[Action → Store → View<br/>단방향 상태 흐름]
+    end
+
+    S1 -->|UI 레벨로 축소 적용| U1
+    S2 -->|동일 개념 구현| U2
+    S3 -->|동일 개념 구현| U3
+    S4 -->|동일 개념 구현| U4
+
+    style S1 fill:#2c3e50,color:#fff
+    style S2 fill:#c0392b,color:#fff
+    style S3 fill:#27ae60,color:#fff
+    style S4 fill:#8e44ad,color:#fff
+    style U1 fill:#2980b9,color:#fff
+    style U2 fill:#2980b9,color:#fff
+    style U3 fill:#2980b9,color:#fff
+    style U4 fill:#2980b9,color:#fff
+```
+
+| Main Portfolio 설계 | React Portfolio 검증 |
+|--------------------|---------------------|
+| Game Server State (In-memory) | Zustand Single Source of Truth |
+| Redis Hot Snapshot | 메모리 스냅샷 저장·전환 |
+| MongoDB Cold Snapshot | JSON Export / Import |
+| Event Sourcing | Action → Store → View 단방향 흐름 |
+| Admin Dashboard 설계 | Inspector / Editor / Preview 패턴 구현 |
+
+-----
+
 ## 💡 Core Competencies
 
 ```mermaid
