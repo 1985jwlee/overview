@@ -205,46 +205,49 @@ graph TB
 |Event-driven (Kafka)|서비스 간 비동기 통신       |장애 전파 차단, 비동기 처리          |
 |Multi-level Cache   |Memory → Redis → DB|L1 캐시 히트 시 마이크로초 응답       |
 
+-----
+
 ### 📊 Coin Data API 상세
 
-**외부 데이터 파이프라인** — C#으로 DI 컨테이너와 웹서버 프레임워크를 직접 구현
+**설계 원칙의 도메인 일반화 증명 — DI 컨테이너 · 웹서버 프레임워크 직접 구현 · 외부 데이터 파이프라인**
 
-> 단순히 라이브러리를 “사용”하는 것을 넘어, 프레임워크가 **왜 그렇게 설계되었는지**를 직접 구현으로 증명한 프로젝트
+> 메인 포트폴리오의 설계 원칙이 게임 외 도메인에서도 동일하게 작동함을 증명한 프로젝트입니다.  
+> 단순히 라이브러리를 "사용"하는 것을 넘어, 프레임워크가 **왜 그렇게 설계되었는지**를 직접 구현으로 증명했습니다.
 
 ```mermaid
 graph TB
     subgraph External["외부 데이터 소스"]
-        BINANCE[Binance WebSocket<br/>실시간 Kline 스트림]
-        OTHER[기타 거래소 API]
+        BINANCE["Binance WebSocket\n실시간 Kline 스트림"]
+        OTHER["기타 거래소 API"]
     end
 
     subgraph Ingestion["수집 계층 (C# / .NET)"]
-        SOCKET[BinanceSocketKlineManager<br/>WebSocket 연결 관리]
-        IEXCHANGE[IExchangeKlineManager<br/>거래소 추상 인터페이스]
+        SOCKET["BinanceSocketKlineManager\nWebSocket 연결 관리"]
+        IEXCHANGE["IExchangeKlineManager\n거래소 추상 인터페이스"]
         SOCKET -->|구현| IEXCHANGE
     end
 
     subgraph Core["코어 인프라 (직접 구현)"]
-        DI[DIContainer<br/>직접 구현한 DI 컨테이너]
-        WEB[WebServerFramework<br/>직접 구현한 웹서버]
-        RX[RxConcurrentDictionary<br/>Reactive 동시성 딕셔너리]
+        DI["DIContainer\n직접 구현한 DI 컨테이너"]
+        WEB["WebServerFramework\n직접 구현한 웹서버"]
+        RX["RxConcurrentDictionary\nReactive 동시성 딕셔너리"]
     end
 
     subgraph Processing["처리 계층"]
-        DR[DataResource<br/>데이터 소스 추상화]
-        IND[Indicators<br/>기술 지표 계산 엔진]
+        DR["DataResource\n데이터 소스 추상화"]
+        IND["Indicators\n기술 지표 계산 엔진"]
     end
 
     subgraph Output["서비스 제공"]
-        API[REST API<br/>정규화된 데이터 제공]
+        API["REST API\n정규화된 데이터 제공"]
     end
 
     BINANCE -->|WebSocket| SOCKET
     OTHER --> IEXCHANGE
     IEXCHANGE --> DR
-    DI -->|의존성 주입| SOCKET
-    DI -->|의존성 주입| DR
-    DI -->|의존성 주입| IND
+    DI -.->|의존성 주입| SOCKET
+    DI -.->|의존성 주입| DR
+    DI -.->|의존성 주입| IND
     DR --> RX
     RX --> IND
     IND --> API
@@ -253,25 +256,26 @@ graph TB
     style DI fill:#8e44ad,color:#fff
     style WEB fill:#8e44ad,color:#fff
     style IEXCHANGE fill:#2980b9,color:#fff
+    style RX fill:#2980b9,color:#fff
 ```
 
-**핵심 설계 판단:**
+**직접 구현한 것들과 그 이유:**
 
-|직접 구현한 것                     |이유              |얻은 것                |
-|-----------------------------|----------------|--------------------|
-|DI 컨테이너                      |프레임워크 내부 동작 이해  |의존성 그래프 · 생명주기 완전 제어|
-|웹서버 프레임워크                    |HTTP 파이프라인 원리 체득|미들웨어 · 라우팅 구조 깊은 이해 |
-|`IExchangeKlineManager` 인터페이스|거래소 교체 가능성 전제   |데이터 소스 변경 시 서비스 무영향 |
-|`RxConcurrentDictionary`     |동시성 + 반응형 데이터 필요|스레드 안전 + 변경 스트림 구독  |
+| 직접 구현한 것 | 이유 | 얻은 것 |
+|-------------|------|--------|
+| DI 컨테이너 | 프레임워크 내부 동작 이해 | 의존성 그래프 · 생명주기 완전 제어 |
+| 웹서버 프레임워크 | HTTP 파이프라인 원리 체득 | 미들웨어 · 라우팅 구조 깊은 이해 |
+| `IExchangeKlineManager` 인터페이스 | 거래소 교체 가능성 전제 | 데이터 소스 변경 시 서비스 무영향 |
+| `RxConcurrentDictionary` | 동시성 + 반응형 데이터 필요 | 스레드 안전 + 변경 스트림 구독 |
 
 **장애 격리 설계:**
 
 ```mermaid
 flowchart LR
-    A[Binance WebSocket 장애] -->|격리| B[DataResource 캐시 유지]
-    B --> C[API 정상 제공 유지]
-    D[거래소 스키마 변경] -->|흡수| E[IExchangeKlineManager 구현체만 수정]
-    E --> F[내부 표준 API 계약 유지]
+    A["Binance WebSocket 장애"] -->|격리| B["DataResource 캐시 유지"]
+    B --> C["API 정상 제공 유지"]
+    D["거래소 스키마 변경"] -->|흡수| E["IExchangeKlineManager 구현체만 수정"]
+    E --> F["내부 표준 API 계약 유지"]
 
     style A fill:#e74c3c,color:#fff
     style D fill:#e74c3c,color:#fff
@@ -279,7 +283,18 @@ flowchart LR
     style F fill:#27ae60,color:#fff
 ```
 
-> Supporting 포트폴리오는 독립 결과물이면서, 메인 포트폴리오의 **설계 판단을 뒷받침하는 근거**
+**메인 포트폴리오 설계 원칙 — 도메인 일반화 대응표:**
+
+| 원칙 | 메인 포트폴리오 (게임) | Coin Data API (금융) |
+|------|---------------------|-------------------|
+| **외부 격리** | DB 장애 시 게임플레이 계속 | 거래소 장애 시 캐시 API 제공 |
+| **정규화 계층** | Domain Event → DB Schema | External API → Internal Schema |
+| **계약 안정성** | 운영 API 불변 유지 | 클라이언트 API 불변 유지 |
+| **비동기 처리** | Kafka Event Stream | WebSocket → Queue → Cache |
+| **장애 복구** | Redis Hot / MongoDB Cold Snapshot | In-Memory Cache + 자동 재연결 |
+
+> **핵심 메시지**: "설계 원칙은 게임 도메인에만 국한되지 않습니다.  
+> 같은 원칙이 금융 도메인에서도 동일하게 작동함을 직접 구현으로 증명합니다."
 
 -----
 
