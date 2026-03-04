@@ -113,12 +113,15 @@ graph LR
     MAIN["🚩 Main Portfolio<br/>Server-authoritative<br/>Event-driven Platform"]
 
     IOT["🌡️ Production IoT Backend<br/>실무 IoT 아키텍처 · 보안 · 성능"]
+    NGINX["🛡️ Nginx Gateway<br/>인프라 · HTTPS · Rate Limiting · Docker"]
+    
     SHADER["🎨 Shader Experiments<br/>GPU · 프레임 단위 사고"]
     VAMPIRE["🎮 Vampire Survival<br/>실시간 루프 · 상태 관리"]
     COIN["📊 Coin Data API<br/>직접 구현한 DI · 웹서버 · 데이터 파이프라인"]
     REACT["💻 React Experiments<br/>전체 시스템 흐름 이해"]
 
     IOT -->|프로덕션 레벨 설계 판단| MAIN
+    NGINX -->|프로덕션 인프라 게이트웨이 설계| MAIN
     SHADER -->|렌더링 최적화 이해| MAIN
     VAMPIRE -->|실시간 구조 체감| MAIN
     COIN -->|DI · 파이프라인 설계 구현력| MAIN
@@ -131,6 +134,7 @@ graph LR
 |포트폴리오                       |링크                                                                           |역할                                      |
 |----------------------------|-----------------------------------------------------------------------------|----------------------------------------|
 |🌡️ **Production IoT Backend**|[production-iot-backend](https://github.com/1985jwlee/production-iot-backend)|실무 IoT 시스템 · 마이크로서비스 · 보안 설계            |
+|🛡️ Nginx | [nginx](https://github.com/1985jwlee/nginx_settings)| Gatewaynginx_settingsDocker 기반 Nginx 설계 · HTTPS/TLS · Rate Limiting · CCTV 동적 프록시    |
 |🎨 Client Rendering          |[Shader Experiments](https://github.com/1985jwlee/portpolio_shader)          |GPU, 프레임 단위 사고 이해                       |
 |🎮 Real-time Game            |[Vampire Survival](https://github.com/1985jwlee/portpolio_vampiresurvival)   |실시간 루프·상태 관리 경험                         |
 |📊 **Coin Data API**         |[portpolio_coindataapi](https://github.com/1985jwlee/portpolio_coindataapi)  |DI 컨테이너 · 웹서버 프레임워크 직접 구현 · 외부 데이터 파이프라인|
@@ -276,6 +280,33 @@ flowchart LR
 ```
 
 > Supporting 포트폴리오는 독립 결과물이면서, 메인 포트폴리오의 **설계 판단을 뒷받침하는 근거**
+
+-----
+
+### 🛡️ Nginx Gateway 상세
+
+**IoT 현장 제어 시스템의 인프라 게이트웨이 레이어**
+
+> Production IoT Backend의 단일 진입점 역할을 담당하는 Nginx 설계 문서입니다.  
+> 설정 파일 코드보다 **왜 이렇게 설계했는가**에 집중한 인프라 포트폴리오입니다.
+```mermaid
+flowchart LR
+    subgraph INFRA["Nginx Gateway 핵심 역할"]
+        TLS["🔐 HTTPS Termination\nLet's Encrypt + Certbot"]
+        PROXY["🔀 Reverse Proxy\nAPI 라우팅 · SPA 서빙"]
+        SEC["🛡️ 보안 게이트\nRate Limit · IP 접근 제어"]
+        MEDIA["📷 스트리밍 프록시\nCCTV 동적 라우팅 · MinIO 캐시"]
+    end
+
+    MAIN["🚩 Main Portfolio\n(메인 포트폴리오)"] -->|인프라 레이어| INFRA
+```
+
+| 설계 포인트 | 판단 근거 |
+|---|---|
+| Nginx를 단일 Gateway로 | 포트 단일화 · TLS 분리 · Rate Limiting 중앙화 |
+| Compose 스택 분리 | 배포 주기가 다른 서비스는 독립적으로 운영 |
+| Webroot 방식 인증서 갱신 | Nginx 중단 없이 12시간 주기 자동 갱신 |
+| CCTV 동적 프록시 | 카메라 자격증명을 Nginx 레이어에서 주입, 프론트엔드 노출 방지 |
 
 -----
 
