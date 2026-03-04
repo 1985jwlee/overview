@@ -35,101 +35,205 @@ timeline
 
 -----
 
-## 🚩 Flagship Portfolio
+## 🚩 Main Portfolio — 상세
 
-**→ [portpolio_main](https://github.com/1985jwlee/portpolio_main)**
+**Event-driven Real-time Game Platform**  
+→ [portpolio_main](https://github.com/1985jwlee/portpolio_main)
 
-**Server-authoritative & Event-driven Game / Platform Architecture**
+> 실시간 판정은 메모리에서 즉시 끝나고, 기록과 복구는 비동기로 흡수되는 구조.  
+> 코드 구현이 아닌 **"어떤 판단으로 이 구조에 도달했는가"**를 증명하는 포트폴리오입니다.
 
-### System Architecture
+---
+
+### 전체 시스템 구조
 
 ```mermaid
 graph TB
     subgraph Client["🎮 Client Layer"]
-        U[Unity Client]
+        UNITY["Unity Client\nServer-Authoritative"]
     end
 
-    subgraph Realtime["⚡ Real-time Layer (C# Server)"]
-        GS[Game Server<br/>Server-authoritative]
-        RT[실시간 판정 엔진]
-        GS --> RT
+    subgraph GameServer["⚡ Game Server Layer (C#)"]
+        GS["TCP Socket Server"]
+        GAMELOOP["GameLoop Ticker\n50ms Fixed"]
+        MEMORY["In-Memory State\nPlayer / World"]
+        CMD["Command Validation\nPipeline"]
+        EPB["Kafka Producer\nFire-and-Forget"]
     end
 
-    subgraph Platform["🌐 Platform Layer (bun.js / ElysiaJS)"]
-        API[Platform API Server]
-        AUTH[Auth / Session]
-        API --> AUTH
+    subgraph EventStream["📨 Event Stream"]
+        KAFKA["Apache Kafka\nDomain Events"]
     end
 
-    subgraph EventStream["📨 Event Stream (Kafka)"]
-        KP[Producer]
-        KC[Consumer]
-        KP --> KC
+    subgraph Platform["🌐 Platform Server (TypeScript / Bun.js)"]
+        CONSUMER["Kafka Consumer"]
+        HANDLER["Idempotency\nHandler"]
+        API["REST API\nElysiaJS"]
     end
 
     subgraph Storage["💾 Storage Layer"]
-        REDIS[(Redis<br/>🔴 Hot Data)]
-        MONGO[(MongoDB<br/>🟢 Cold Snapshot)]
+        REDIS["Redis\n🔴 Hot Snapshot\nRTO: 10초"]
+        MONGO["MongoDB\n🟢 Cold Snapshot\nRTO: 2~3분"]
+        MYSQL["MySQL\n🔵 OLTP / ACID"]
     end
 
-    U <-->|WebSocket / TCP| GS
-    U <-->|HTTP REST| API
-    RT -->|이벤트 발행| KP
-    KC -->|비동기 기록| MONGO
-    GS <-->|세션 / 상태| REDIS
-    API <-->|조회| MONGO
+    UNITY -->|"Command\n(의도만 전달)"| GS
+    GS --> CMD --> GAMELOOP --> MEMORY --> EPB
+    EPB -->|"비동기"| KAFKA
+    KAFKA --> CONSUMER --> HANDLER --> API
+    GAMELOOP -.->|"Periodic"| REDIS
+    HANDLER -.->|"Cold"| MONGO
+    HANDLER --> MYSQL
+    GS -->|"즉시 응답 < 50ms"| UNITY
+
+    style GAMELOOP fill:#e74c3c,color:#fff
+    style KAFKA fill:#f39c12,color:#fff
+    style REDIS fill:#c0392b,color:#fff
+    style MONGO fill:#27ae60,color:#fff
 ```
 
-### 핵심 설계 판단
+---
+
+### 5대 설계 원칙
 
 ```mermaid
-flowchart LR
-    A[클라이언트 요청] --> B{서버 권한 판정}
-    B -->|실시간 응답| C[즉각 피드백]
-    B -->|이벤트 발행| D[Kafka Stream]
-    D --> E[비동기 기록]
-    E --> F[(MongoDB Cold)]
-    C --> G[(Redis Hot)]
-
-    style B fill:#ff6b6b,color:#fff
-    style D fill:#4ecdc4,color:#fff
-    style G fill:#e74c3c,color:#fff
-    style F fill:#27ae60,color:#fff
+mindmap
+  root((5대\n설계 원칙))
+    ① 판정은 메모리에서 즉시
+      GameLoop In-Memory
+      DB 응답 대기 없음
+    ② 기록은 이벤트로 분리
+      Kafka Fire-and-Forget
+      게임플레이 무영향
+    ③ 장애는 국소화
+      장애 영향도 매트릭스
+      전파 차단 구조
+    ④ 기능 추가가 흐름을 깨지 않음
+      Kafka Topic 구독 확장
+      기존 코드 무수정
+    ⑤ 운영자가 이해할 수 있음
+      Admin Dashboard
+      운영 가이드 문서화
 ```
 
-|설계 포인트                  |판단 근거                    |
-|------------------------|-------------------------|
-|Server-authoritative    |클라이언트 치트 방지, 일관된 게임 상태 보장|
-|실시간 판정 ↔ 비동기 기록 분리      |판정 지연 최소화, 기록 부하 격리      |
-|Redis Hot / MongoDB Cold|읽기 성능 vs 영속성 트레이드오프      |
-|Zone 기반 수평 확장           |단일 서버 병목 제거, 점진적 확장 가능   |
+---
 
------
+### 핵심 흐름: Command → Event
 
-## 🧩 Supporting Portfolios
+```mermaid
+sequenceDiagram
+    participant C as Unity Client
+    participant GS as Game Server
+    participant M as Memory
+    participant K as Kafka
+    participant PS as Platform
+    participant DB as Database
+
+    C->>GS: MoveCommand (의도만 전달)
+    GS->>GS: Validate (거리·속도·치트)
+    GS->>M: Update State (즉시 확정)
+    GS->>C: Response < 50ms
+    GS--)K: PlayerMovedEvent (Fire-and-Forget)
+    Note over GS,K: 게임 서버는 Kafka 응답을 기다리지 않음
+    K->>PS: Event Delivery
+    PS->>PS: Idempotency Check
+    PS->>DB: Persist
+    Note over GS,DB: DB 저장 실패가 게임플레이를 막지 않음
+```
+
+---
+
+### 장애 영향도 매트릭스
+
+| 장애 대상 | 게임플레이 | 기록 | 운영 API | RTO | 복구 방식 |
+|-----------|------------|------|----------|-----|----------|
+| 게임 서버 | 🔴 중단 | 🟡 일시 중단 | 🟢 정상 | 10초 | Redis Hot Snapshot |
+| Redis | 🟡 순간 지연 | 🟢 정상 | 🟢 정상 | 수초 | Failover |
+| Kafka | 🟢 정상 | 🟡 일시 중단 | 🟢 정상 | 즉시 | 메모리 버퍼 |
+| MySQL | 🟢 정상 | 🟡 일시 중단 | 🔴 일부 실패 | 중간 | Kafka 누적 재처리 |
+| 플랫폼 서버 | 🟢 정상 | 🟡 일시 중단 | 🔴 중단 | 수초 | 재시작 + Offset 재개 |
+
+> **설계 철학**: "게임플레이는 어떤 백엔드 장애에도 멈추지 않는다"
+
+---
+
+### 의도적으로 하지 않은 것들
+
+| 비선택 | 이유 |
+|--------|------|
+| 게임 서버 직접 DB 접근 | GameLoop이 DB 응답 대기 → 장애 전파 |
+| 초기 MSA 구조 | Over-engineering, 운영 복잡도 과다 |
+| UDP 프로토콜 | 아키텍처 증명 목적에 불필요한 복잡도 |
+| 완전한 MMO 콘텐츠 | "언제 멈추어야 하는지 안다"를 증명하기 위해 |
+
+---
+
+### Supporting Portfolios → Main 설계 기여 근거
 
 ```mermaid
 graph LR
-    MAIN["🚩 Main Portfolio<br/>Server-authoritative<br/>Event-driven Platform"]
+    VAMPIRE["🎮 Vampire Survival"] -->|"클라이언트 권한 한계 체감\n→ Server-authoritative"| MAIN
+    SHADER["🎨 Shader Experiments"] -->|"DrawCall 100→1~5\n→ 20fps 동기화 근거"| MAIN
+    REACT["💻 React Experiments"] -->|"Zustand=In-memory, JSON=Cold Snapshot\n→ Admin Dashboard 검증"| MAIN
+    IOT["🌡️ Production IoT"] -->|"Kafka·Adapter 실무 적용\n→ 설계 판단력 증명"| MAIN
+    NGINX["🛡️ Nginx Gateway"] -->|"TLS·Rate Limit·Docker\n→ 운영 인프라 설계"| MAIN
+    COIN["📊 Coin Data API"] -->|"동일 원칙 금융 도메인 적용\n→ 설계 일반화 증명"| MAIN
 
-    IOT["🌡️ Production IoT Backend<br/>실무 IoT 아키텍처 · 보안 · 성능"]
-    NGINX["🛡️ Nginx Gateway<br/>인프라 · HTTPS · Rate Limiting · Docker"]
-    
-    SHADER["🎨 Shader Experiments<br/>GPU · 프레임 단위 사고"]
-    VAMPIRE["🎮 Vampire Survival<br/>실시간 루프 · 상태 관리"]
-    COIN["📊 Coin Data API<br/>직접 구현한 DI · 웹서버 · 데이터 파이프라인"]
-    REACT["💻 React Experiments<br/>전체 시스템 흐름 이해"]
-
-    IOT -->|프로덕션 레벨 설계 판단| MAIN
-    NGINX -->|프로덕션 인프라 게이트웨이 설계| MAIN
-    SHADER -->|렌더링 최적화 이해| MAIN
-    VAMPIRE -->|실시간 구조 체감| MAIN
-    COIN -->|DI · 파이프라인 설계 구현력| MAIN
-    REACT -->|클라이언트↔서버 흐름 이해| MAIN
+    MAIN["🚩 Main Portfolio"]
 
     style MAIN fill:#2c3e50,color:#fff
-    style IOT fill:#1a6b3c,color:#fff
 ```
+
+---
+
+### 구현 로드맵
+
+```mermaid
+graph LR
+    P0["Phase 0\n설계 확정\n✅ 완료"] --> P1["Phase 1\nMVP 구현\n🔄 진행 예정\n1~2주"]
+    P1 --> P2["Phase 2\n이벤트 신뢰성\n📋 계획\n3~5일"]
+    P2 --> P3["Phase 3\nHot/Cold Snapshot\n📋 계획\n4~7일"]
+    P3 --> P4["Phase 4\nAdmin Dashboard\n📋 계획\n3~5일"]
+
+    style P0 fill:#27ae60,color:#fff
+    style P1 fill:#f39c12,color:#fff
+    style P2 fill:#7f8c8d,color:#fff
+    style P3 fill:#7f8c8d,color:#fff
+    style P4 fill:#7f8c8d,color:#fff
+```
+
+| Phase | 핵심 완료 조건 |
+|-------|---------------|
+| Phase 1 | Client → Server → Kafka → Platform → DB 전체 흐름 동작 |
+| Phase 2 | Idempotency + DLQ 동작 |
+| Phase 3 | 서버 재시작 후 상태 복원 (Redis → MongoDB 순차) |
+| Phase 4 | 실시간 모니터링 + Snapshot 관리 UI |
+
+---
+
+### 📐 기술 스택
+
+| 영역 | 기술 |
+|------|------|
+| 게임 서버 | C# .NET 8.0, TCP/IP, MessagePack |
+| 플랫폼 서버 | TypeScript, Bun.js, ElysiaJS, Drizzle ORM |
+| 이벤트 스트림 | Apache Kafka |
+| 저장소 | Redis · MongoDB · MySQL |
+| 클라이언트 | Unity 2022.3 LTS |
+
+---
+
+### 📚 상세 문서
+
+| 문서 | 내용 | 대상 |
+|------|------|------|
+| [아키텍처 상세](docs/architecture-detail.md) | 전체 시스템 구조 · 설계 원칙 | 백엔드 엔지니어 |
+| [설계 결정 과정](docs/design-decisions.md) | 왜 이렇게 설계했는가 | 테크 리드, CTO |
+| [운영 가이드](docs/operational-guide.md) | 장애 대응 · 모니터링 | DevOps, SRE |
+| [구현 로드맵](docs/implementation-roadmap.md) ⭐ | 단계별 구현 계획 | 개발자, PM |
+| [다이어그램](docs/diagrams.md) | Mermaid 다이어그램 전체 | 프레젠테이션용 |
+
+-----
 
 |포트폴리오                       |링크                                                                           |역할                                      |
 |----------------------------|-----------------------------------------------------------------------------|----------------------------------------|
@@ -139,6 +243,8 @@ graph LR
 |🎮 Real-time Game            |[Vampire Survival](https://github.com/1985jwlee/portpolio_vampiresurvival)   |실시간 루프·상태 관리 경험                         |
 |📊 **Coin Data API**         |[portpolio_coindataapi](https://github.com/1985jwlee/portpolio_coindataapi)  |DI 컨테이너 · 웹서버 프레임워크 직접 구현 · 외부 데이터 파이프라인|
 |💻 Frontend Literacy         |[React Experiments](https://github.com/1985jwlee/portpolio_react)            |전체 시스템 흐름 이해                            |
+
+-----
 
 ### 🌡️ Production IoT Backend 상세
 
