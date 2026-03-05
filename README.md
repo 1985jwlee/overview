@@ -246,71 +246,222 @@ graph LR
 
 -----
 
-### 🌡️ Production IoT Backend 상세
+## 🌡️ Production IoT Backend — 상세
 
-**도로 살수 시스템**을 위한 프로덕션 레벨 IoT 백엔드 아키텍처
+**쿨링로드 백엔드 시스템 (도로 살수 장비 원격 제어)**  
+→ [production-iot-backend](https://github.com/1985jwlee/production-iot-backend)
+
+> 실제 도로 위 PLC 장비를 제어하는 프로덕션 IoT 시스템.  
+> **“설계 판단 + 코드 리뷰 기반 버그 10종 수정 + 5가지 기술 챌린지 해결”** 로 운영 신뢰성을 직접 증명합니다.
+
+**Version**: 3.8.0 | **Status**: ✅ Production Ready | **코드**: ~10,000 lines
+
+-----
+
+### 전체 시스템 구조
 
 ```mermaid
 graph TB
-    subgraph Client["Client Layer"]
-        WEB[Web Dashboard]
-        MOBILE[Mobile App]
+    subgraph Client["🖥️ Client Layer"]
+        WEB["Web / Mobile"]
+        ADMIN["Admin Dashboard"]
     end
 
-    subgraph Gateway["API Gateway (Nginx)"]
-        LB[Load Balancing<br/>Rate Limiting · SSL]
+    subgraph Gateway["🛡️ Nginx Gateway"]
+        RL["Rate Limiting · SSL/TLS\nSPA Fallback · CCTV Proxy"]
     end
 
-    subgraph App["App Layer (Bun.js / ElysiaJS)"]
-        AUTH[Auth Service<br/>JWT + MFA]
-        ROAD[Cooling Road<br/>Service]
-        ADMIN[Admin Service]
-        WS[WebSocket<br/>Manager]
+    subgraph App["⚡ Application (Bun.js + ElysiaJS)"]
+        AUTH["Auth\nJWT+MFA+RBAC"]
+        COOLING["CoolingRoad\n살수 제어"]
+        WS["WebSocket\n실시간"]
+        PLC_C["PLC Controller\nModbus TCP"]
+        SCHED["Scheduler\nCron + KMA API"]
+        AI["AI\nSTT + Ollama"]
     end
 
-    subgraph MQ["Message Queue (Kafka)"]
-        K1[device.control]
-        K2[operation.events]
-        K3[ai.decision]
+    subgraph Infra["📨 Kafka Layer"]
+        KAFKA["Kafka\n0.3초 벌크 + DLQ"]
+        ADAPTER["PLC Adapter\nReal / Fake"]
     end
 
-    subgraph Storage["Storage"]
-        MYSQL[(MySQL<br/>트랜잭션 데이터)]
-        MONGO[(MongoDB<br/>로그 · 이벤트)]
-        REDIS[(Redis<br/>세션 · 캐시)]
+    subgraph Store["💾 Storage Layer"]
+        MY["MySQL\n정형 데이터"]
+        MG["MongoDB\n로그"]
+        RD["Redis\n캐시/세션"]
+        MN["MinIO\n이미지"]
     end
 
-    subgraph IoT["IoT Layer"]
-        ADAPTER[PLC Adapter<br/>Modbus TCP]
-        PLC1[PLC Site A]
-        PLC2[PLC Site B]
-        PLCN[PLC Site N...]
-    end
+    WEB & ADMIN --> RL --> AUTH & COOLING & WS & AI
+    COOLING & SCHED --> KAFKA --> PLC_C --> ADAPTER
+    App --> MY & MG & RD & MN
 
-    WEB & MOBILE --> LB
-    LB --> AUTH & ROAD & ADMIN & WS
-    ROAD -->|이벤트 발행| K1 & K2
-    K3 -->|AI 판단 구독| ROAD
-    AUTH --> MYSQL & REDIS
-    ROAD --> MYSQL & MONGO & REDIS
-    K2 --> ADAPTER
-    ADAPTER --> PLC1 & PLC2 & PLCN
-
-    style ADAPTER fill:#e67e22,color:#fff
-    style LB fill:#2980b9,color:#fff
+    style KAFKA fill:#f39c12,color:#fff
+    style ADAPTER fill:#27ae60,color:#fff
+    style RL fill:#8e44ad,color:#fff
 ```
 
-**핵심 설계 패턴 요약:**
+-----
 
-|패턴                  |적용                 |성과                        |
-|--------------------|-------------------|--------------------------|
-|Adapter Pattern     |PLC 통신 추상화         |환경 변수 하나로 Real/Fake PLC 전환|
-|Repository Pattern  |DB 접근 계층 분리        |ORM 교체 시 레포지토리만 수정        |
-|Dependency Injection|tsyringe 기반 DI     |Mock 주입으로 단위 테스트 가능       |
-|Semaphore Pattern   |동시 이미지 캡처 제어       |CPU 사용률 70% → 30%         |
-|Event-driven (Kafka)|서비스 간 비동기 통신       |장애 전파 차단, 비동기 처리          |
-|Multi-level Cache   |Memory → Redis → DB|L1 캐시 히트 시 마이크로초 응답       |
+### 3가지 핵심 설계 결정
 
+**① PLC Adapter Pattern — 하드웨어 격리**
+
+```mermaid
+graph LR
+    CTRL["PLCController"] --> IFACE["IPLCReader\nIPLCWriter"]
+    IFACE -->|"PLCTYPE=REAL"| REAL["ModbusPLCAdapter\nModbus TCP"]
+    IFACE -->|"PLCTYPE=FAKE"| FAKE["FakePLCAdapter\n개발/테스트용"]
+
+    style REAL fill:#27ae60,color:#fff
+    style FAKE fill:#f39c12,color:#fff
+```
+
+PLC 하드웨어 의존성을 인터페이스 뒤에 격리 → 개발 환경에서 실제 장비 없이 전환 가능.  
+게임 서버의 Domain Event 격리, Coin Data API의 `IExchangeKlineManager`와 **동일한 원칙의 다른 도메인 적용**.
+
+-----
+
+**② Kafka 벌크 전송 + DLQ — 처리량과 신뢰성**
+
+```mermaid
+sequenceDiagram
+    participant C as Controllers (여러 개)
+    participant B as KafkaProducerHelper
+    participant K as Kafka
+    participant DLQ as DLQ (MySQL)
+
+    C->>B: enqueue() ×N
+    Note over B: 0.3초 버퍼링
+    B->>K: 벌크 전송 (최대 100개)
+    alt 실패
+        B->>DLQ: PENDING 저장
+    end
+```
+
+|지표     |즉시 전송    |벌크 전송       |
+|-------|---------|------------|
+|네트워크 요청|메시지당 1회  |100개당 1~2회  |
+|처리량    |100 msg/s|5,000+ msg/s|
+|CPU    |~80%     |~30%        |
+
+-----
+
+**③ JWT 이중 무효화 — PLC 제어 보안**
+
+```mermaid
+flowchart LR
+    REQ["API 요청"] --> B1{"TrashboxJWT\n블랙리스트"}
+    B1 -->|"있음"| D1["🔴 거부"]
+    B1 -->|"없음"| B2{"jwtTokenVersion\nDB 비교"}
+    B2 -->|"불일치"| D2["🔴 거부"]
+    B2 -->|"일치"| OK["✅ 허용"]
+```
+
+로그아웃 즉시 무효화(TrashboxJWT) + 타기기 세션 자동 만료(jwtTokenVersion).  
+PLC 제어처럼 민감한 작업에서의 동시 접근을 **구조로 방지**.
+
+-----
+
+### 의도적으로 하지 않은 것들
+
+|비선택              |이유                                |
+|-----------------|----------------------------------|
+|Offset 페이지네이션    |1M rows에서 83배 성능 차이 → Cursor 선택   |
+|백엔드 Rate Limiting|도달 후 차단 → 낭비. Nginx에서 도달 전 차단     |
+|단일 JWT 무효화       |PLC 제어에서 로그아웃 후 재사용 = 보안 위협       |
+|즉시 Kafka 전송      |고부하 네트워크 폭증 → 0.3초 버퍼링 선택         |
+|MSA 즉시 분리        |규모 대비 운영 복잡도 과다 → Modular Monolith|
+
+-----
+
+### 코드 리뷰 기반 버그 수정 이력
+
+> **“설계가 코드 리뷰 전까지는 안전해 보였다”**
+
+|심각도       |버그                                      |수정 버전 |
+|----------|----------------------------------------|------|
+|🔴 Critical|RBAC `checkRole()` `async` 버그 → 모든 권한 우회|v3.5.0|
+|🔴 Critical|Organizer 평문 비밀번호 SQL 비교 → bcrypt 전환    |v3.6.7|
+|🔴 Critical|날씨 캐시 Redis hit 시 서버 크래시                |v3.6.0|
+|🔴 Critical|PLC 멱등성 쿼리 방향 반전 → 중복 분사                |v3.6.0|
+|🟠 High    |siteid 소유권 미검증 → 타기관 데이터 열람             |v3.6.0|
+|🟠 High    |`stopSpray` 조건 `&&` → `||` 오류           |v3.6.0|
+
+**구조적 개선**:
+
+- AuthGuard 중복 ~70줄 → `createGuard()` 통합 (v3.3.18)
+- FFmpeg 2단계 → 1단계 인코딩 (메모리 40%↓, 속도 30%↑) (v3.5.2)
+- Offset → Cursor 페이징 (83배 성능) (v3.3.7)
+
+-----
+
+### 기술 챌린지 해결 과정
+
+실무 운영 중 마주한 5가지 기술적 문제와 해결 요약.
+
+|챌린지              |문제                                           |해결                                                         |
+|-----------------|---------------------------------------------|-----------------------------------------------------------|
+|WebSocket 안정성    |모바일 네트워크 전환 시 좀비 연결 누적 + 즉시 재연결 폭증           |Application-level Heartbeat (30s/90s) + Exponential Backoff|
+|이미지 처리 병목        |10개 현장 동시 캡처 → FFmpeg 10개 동시 실행 → OOM 크래시    |`Semaphore(3)` 직접 구현 + FFmpeg WebP 직접 출력 (Sharp 제거)        |
+|실시간 동기화          |HTTP Polling — 데이터 변경 없어도 N개 클라이언트가 매 5초 요청  |Kafka + WebSocket Push, 사이트 소유 그룹 기반 라우팅                   |
+|다중 환경 설정         |환경변수 하드코딩 분산 → 배포 후 런타임에서야 오류 발견             |`configs.ts` 단일 진입점 + 시작 시점 필수값 검증                         |
+|Graceful Shutdown|DB 먼저 종료 → Kafka 버퍼 메시지 DLQ 저장 실패 + 타이머 순서 오류|Kafka 버퍼 비우기 → `clearInterval` → Kafka 종료 → DB 종료          |
+
+상세 내용 → [TECHNICAL_CHALLENGES.md](docs/TECHNICAL_CHALLENGES.md)
+
+-----
+
+### Polyglot Persistence
+
+|저장소    |역할                        |선택 이유            |
+|-------|--------------------------|-----------------|
+|MySQL  |사용자·사이트·이력·PLC 명령         |ACID, 복잡한 JOIN   |
+|MongoDB|API 로그·MFA 로그·에러·PLC 이벤트  |유연한 스키마, 대용량     |
+|Redis  |JWT 세션·기상 캐시·분사 중인 사이트 Set|속도, TTL, Set 자료구조|
+|MinIO  |CCTV 이미지·유지보수 사진          |S3 호환, 오브젝트 스토리지 |
+
+-----
+
+### 주요 기능 목록
+
+- 🔐 **인증**: JWT HS512 + MFA TOTP + RBAC 4계층
+- 🌡️ **살수 제어**: PLC Modbus TCP + 멱등성 체크 + 자동 분사 (Cron)
+- 🌐 **실시간**: WebSocket + Kafka 연동, 11가지 토픽
+- 📊 **모니터링**: MongoDB 중앙화 로그 + Admin API
+- 🎙️ **음성 명령**: STT Kafka → Ollama LLM 분석 → WebSocket 결과
+- 🔧 **유지보수**: 이력 등록 + MinIO 이미지 + 실시간 알림
+- 🛡️ **Nginx**: Rate Limiting + SSL/TLS + CCTV 프록시 + SPA Fallback
+
+-----
+
+### 기술 스택
+
+|영역                 |기술                                    |
+|-------------------|--------------------------------------|
+|Runtime / Framework|Bun.js + ElysiaJS + TypeScript        |
+|ORM / DI           |Drizzle ORM + tsyringe                |
+|Message Queue      |Apache Kafka (KafkaJS)                |
+|PLC 통신             |Modbus TCP (modbus-serial)            |
+|이미지 처리             |FFmpeg (WebP 직접 인코딩)                  |
+|저장소                |MySQL · MongoDB · Redis · MinIO       |
+|인프라                |Docker Compose · Nginx · Let’s Encrypt|
+
+-----
+
+### 📚 상세 문서
+
+|문서                                              |내용                  |대상        |
+|------------------------------------------------|--------------------|----------|
+|[설계 결정 과정](docs/design-decisions-portfolio.md) ⭐|왜 이렇게 설계했는가         |테크 리드, CTO|
+|[기술 챌린지](docs/TECHNICAL_CHALLENGES.md) ⭐        |문제 → 원인 → 해결 과정     |테크 리드, CTO|
+|[아키텍처](docs/ARCHITECTURE.md)                    |전체 시스템 구조           |백엔드 엔지니어  |
+|[배포 가이드](docs/DEPLOYMENT.md)                    |Docker + Nginx + SSL|DevOps    |
+|[API 계약](docs/API_CONTRACT.md)                  |API 그룹 구성 + 에러 코드 체계|프론트엔드 개발자 |
+|[WebSocket 가이드](docs/WEBSOCKET_GUIDE.md)        |WebSocket 통합        |프론트엔드 개발자 |
+|[코드 개선 이력](CHANGELOG.md)                        |리팩터링 흐름 (테마별)       |백엔드 엔지니어  |
+
+    
 -----
 
 ### 📊 Coin Data API 상세
