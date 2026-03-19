@@ -1,6 +1,6 @@
 # JW Lee | System-centered Engineer
 
-> **“무엇을 만들었는가”보다 “어떤 판단으로 이 구조에 도달했는가”**
+> **"무엇을 만들었는가"보다 "어떤 판단으로 이 구조에 도달했는가"**
 
 **Real-time · Event-driven · Server-authoritative Architecture**
 
@@ -22,16 +22,18 @@
 ```mermaid
 timeline
     title Career Perspective
-    클라이언트 중심 개발 : Unity 게임 클라이언트
-                        : 셰이더·렌더링 최적화
-                        : 실시간 루프 구현
-    한계 체감 & 전환 : 클라이언트 권한 구조의 한계 인식
-                    : 서버 권한 구조 필요성 체감
-                    : 이벤트 기반 설계 학습
+    게임 클라이언트 개발 (약 8년) : Unity 게임 클라이언트
+                               : 셰이더·렌더링 최적화
+                               : 실시간 루프 구현
+    도메인 전환 준비 (약 16개월, 독학) : 게임 클라이언트 → 백엔드 컨텍스트 전환
+                                   : TypeScript · Node.js · 인프라 독학
+                                   : 클라이언트 권한 구조의 한계 체감
     현재 & 목표 : Server-authoritative 아키텍처 설계
               : Kafka 이벤트 스트림 파이프라인
               : 설계 판단과 운영 가능성 증명
 ```
+
+> **경력 공백(약 16개월)에 대해**: 게임 클라이언트 개발자로서 멀티플레이어 확장의 한계를 구조적으로 체감한 뒤, 백엔드 컨텍스트로 전환하기 위해 TypeScript, Node.js, 인프라, 분산 시스템을 독학했다. 이 기간의 결과물이 IoT 백엔드와 Coin Data API 포트폴리오다.
 
 -----
 
@@ -41,7 +43,7 @@ timeline
 → [portpolio_main](https://github.com/1985jwlee/portpolio_main)
 
 > 실시간 판정은 메모리에서 즉시 끝나고, 기록과 복구는 비동기로 흡수되는 구조.  
-> 코드 구현이 아닌 **"어떤 판단으로 이 구조에 도달했는가"**를 증명하는 포트폴리오입니다.
+> 코드 구현이 아닌 **"어떤 판단으로 이 구조에 도달했는가"** 를 증명하는 포트폴리오입니다.
 
 ---
 
@@ -50,7 +52,7 @@ timeline
 ```mermaid
 graph TB
     subgraph Client["🎮 Client Layer"]
-        UNITY["Unity Client\nServer-Authoritative"]
+        UNITY["Unity Client</br>Server-Authoritative"]
     end
 
     subgraph GameServer["⚡ Game Server Layer (C#)"]
@@ -98,7 +100,7 @@ graph TB
 
 ```mermaid
 mindmap
-  root((5대\n설계 원칙))
+  root((5대</br>설계 원칙))
     ① 판정은 메모리에서 즉시
       GameLoop In-Memory
       DB 응답 대기 없음
@@ -235,26 +237,17 @@ graph LR
 
 -----
 
-|포트폴리오                       |링크                                                                           |역할                                      |
-|----------------------------|-----------------------------------------------------------------------------|----------------------------------------|
-|🌡️ **Production IoT Backend**|[production-iot-backend](https://github.com/1985jwlee/production-iot-backend)|실무 IoT 시스템 · 마이크로서비스 · 보안 설계            |
-|🛡️ Nginx | [nginx](https://github.com/1985jwlee/nginx_settings)| Gatewaynginx_settingsDocker 기반 Nginx 설계 · HTTPS/TLS · Rate Limiting · CCTV 동적 프록시    |
-|🎨 Client Rendering          |[Shader Experiments](https://github.com/1985jwlee/portpolio_shader)          |GPU, 프레임 단위 사고 이해                       |
-|🎮 Real-time Game            |[Vampire Survival](https://github.com/1985jwlee/portpolio_vampiresurvival)   |실시간 루프·상태 관리 경험                         |
-|📊 **Coin Data API**         |[portpolio_coindataapi](https://github.com/1985jwlee/portpolio_coindataapi)  |DI 컨테이너 · 웹서버 프레임워크 직접 구현 · 외부 데이터 파이프라인|
-|💻 Frontend Literacy         |[React Experiments](https://github.com/1985jwlee/portpolio_react)            |전체 시스템 흐름 이해                            |
-
------
-
 ## 🌡️ Production IoT Backend — 상세
 
 **쿨링로드 백엔드 시스템 (도로 살수 장비 원격 제어)**  
 → [production-iot-backend](https://github.com/1985jwlee/production-iot-backend)
 
-> 실제 도로 위 PLC 장비를 제어하는 프로덕션 IoT 시스템.  
-> **“설계 판단 + 코드 리뷰 기반 버그 10종 수정 + 5가지 기술 챌린지 해결”** 로 운영 신뢰성을 직접 증명합니다.
+> 실제 도로 위 PLC 장비를 제어하는 프로덕션 그레이드 IoT 시스템.  
+> **"설계 판단 + 코드 리뷰 기반 버그 10종 수정 + 5가지 기술 챌린지 해결"** 로 운영 신뢰성을 직접 증명합니다.
 
-**Version**: 3.8.0 | **Status**: ✅ Production Ready | **코드**: ~10,000 lines
+**Version**: 4.4.0 | **Status**: ⚙️ Production-Grade Design (Pre-Launch) | **코드**: ~13,000 lines
+
+> **운영 현황 (솔직하게)**: 현재 실운영 투입 전 단계다. 코드 품질과 아키텍처 수준은 프로덕션 기준을 따르지만, 실측 트래픽 수치(동시 접속자, Kafka 처리량)는 없다. 설계 기준 데이터는 사이트별 1시간 간격 날씨·센서 데이터 24행/일이며, 이를 TimescaleDB hypertable로 처리한다.
 
 -----
 
@@ -317,8 +310,7 @@ graph LR
     style FAKE fill:#f39c12,color:#fff
 ```
 
-PLC 하드웨어 의존성을 인터페이스 뒤에 격리 → 개발 환경에서 실제 장비 없이 전환 가능.  
-게임 서버의 Domain Event 격리, Coin Data API의 `IExchangeKlineManager`와 **동일한 원칙의 다른 도메인 적용**.
+개발 환경에 실제 PLC 장비가 없다는 물리적 제약이 이 패턴을 강제했다. 설계 철학이 아닌 현실 제약에서 나온 결정이다.
 
 -----
 
@@ -342,8 +334,10 @@ sequenceDiagram
 |지표     |즉시 전송    |벌크 전송       |
 |-------|---------|------------|
 |네트워크 요청|메시지당 1회  |100개당 1~2회  |
-|처리량    |100 msg/s|5,000+ msg/s|
+|처리량 (설계 기준)|100 msg/s|5,000+ msg/s|
 |CPU    |~80%     |~30%        |
+
+> 처리량 수치는 실운영 측정값이 아닌 설계 기준값이다.
 
 -----
 
@@ -358,8 +352,7 @@ flowchart LR
     B2 -->|"일치"| OK["✅ 허용"]
 ```
 
-로그아웃 즉시 무효화(TrashboxJWT) + 타기기 세션 자동 만료(jwtTokenVersion).  
-PLC 제어처럼 민감한 작업에서의 동시 접근을 **구조로 방지**.
+로그아웃 즉시 무효화(TrashboxJWT) + 타기기 세션 자동 만료(jwtTokenVersion).
 
 -----
 
@@ -377,8 +370,6 @@ PLC 제어처럼 민감한 작업에서의 동시 접근을 **구조로 방지**
 
 ### 코드 리뷰 기반 버그 수정 이력
 
-> **“설계가 코드 리뷰 전까지는 안전해 보였다”**
-
 |심각도       |버그                                      |수정 버전 |
 |----------|----------------------------------------|------|
 |🔴 Critical|RBAC `checkRole()` `async` 버그 → 모든 권한 우회|v3.5.0|
@@ -388,17 +379,11 @@ PLC 제어처럼 민감한 작업에서의 동시 접근을 **구조로 방지**
 |🟠 High    |siteid 소유권 미검증 → 타기관 데이터 열람             |v3.6.0|
 |🟠 High    |`stopSpray` 조건 `&&` → `||` 오류           |v3.6.0|
 
-**구조적 개선**:
-
-- AuthGuard 중복 ~70줄 → `createGuard()` 통합 (v3.3.18)
-- FFmpeg 2단계 → 1단계 인코딩 (메모리 40%↓, 속도 30%↑) (v3.5.2)
-- Offset → Cursor 페이징 (83배 성능) (v3.3.7)
+> 모든 Critical 버그는 기능 테스트로는 발견 불가능한 종류다. 코드 리뷰에서만 발견됐다.
 
 -----
 
 ### 기술 챌린지 해결 과정
-
-실무 운영 중 마주한 5가지 기술적 문제와 해결 요약.
 
 |챌린지              |문제                                           |해결                                                         |
 |-----------------|---------------------------------------------|-----------------------------------------------------------|
@@ -407,31 +392,6 @@ PLC 제어처럼 민감한 작업에서의 동시 접근을 **구조로 방지**
 |실시간 동기화          |HTTP Polling — 데이터 변경 없어도 N개 클라이언트가 매 5초 요청  |Kafka + WebSocket Push, 사이트 소유 그룹 기반 라우팅                   |
 |다중 환경 설정         |환경변수 하드코딩 분산 → 배포 후 런타임에서야 오류 발견             |`configs.ts` 단일 진입점 + 시작 시점 필수값 검증                         |
 |Graceful Shutdown|DB 먼저 종료 → Kafka 버퍼 메시지 DLQ 저장 실패 + 타이머 순서 오류|Kafka 버퍼 비우기 → `clearInterval` → Kafka 종료 → DB 종료          |
-
-상세 내용 → [TECHNICAL_CHALLENGES.md](docs/TECHNICAL_CHALLENGES.md)
-
------
-
-### Polyglot Persistence
-
-|저장소    |역할                        |선택 이유            |
-|-------|--------------------------|-----------------|
-|MySQL  |사용자·사이트·이력·PLC 명령         |ACID, 복잡한 JOIN   |
-|MongoDB|API 로그·MFA 로그·에러·PLC 이벤트  |유연한 스키마, 대용량     |
-|Redis  |JWT 세션·기상 캐시·분사 중인 사이트 Set|속도, TTL, Set 자료구조|
-|MinIO  |CCTV 이미지·유지보수 사진          |S3 호환, 오브젝트 스토리지 |
-
------
-
-### 주요 기능 목록
-
-- 🔐 **인증**: JWT HS512 + MFA TOTP + RBAC 4계층
-- 🌡️ **살수 제어**: PLC Modbus TCP + 멱등성 체크 + 자동 분사 (Cron)
-- 🌐 **실시간**: WebSocket + Kafka 연동, 11가지 토픽
-- 📊 **모니터링**: MongoDB 중앙화 로그 + Admin API
-- 🎙️ **음성 명령**: STT Kafka → Ollama LLM 분석 → WebSocket 결과
-- 🔧 **유지보수**: 이력 등록 + MinIO 이미지 + 실시간 알림
-- 🛡️ **Nginx**: Rate Limiting + SSL/TLS + CCTV 프록시 + SPA Fallback
 
 -----
 
@@ -445,7 +405,7 @@ PLC 제어처럼 민감한 작업에서의 동시 접근을 **구조로 방지**
 |PLC 통신             |Modbus TCP (modbus-serial)            |
 |이미지 처리             |FFmpeg (WebP 직접 인코딩)                  |
 |저장소                |MySQL · MongoDB · Redis · MinIO       |
-|인프라                |Docker Compose · Nginx · Let’s Encrypt|
+|인프라                |Docker Compose · Nginx · Let's Encrypt|
 
 -----
 
@@ -461,15 +421,40 @@ PLC 제어처럼 민감한 작업에서의 동시 접근을 **구조로 방지**
 |[WebSocket 가이드](docs/WEBSOCKET_GUIDE.md)        |WebSocket 통합        |프론트엔드 개발자 |
 |[코드 개선 이력](CHANGELOG.md)                        |리팩터링 흐름 (테마별)       |백엔드 엔지니어  |
 
-    
 -----
 
-### 📊 Coin Data API 상세
+### ⚠️ 약점과 미해결 지점 (솔직하게)
+
+면접관이 반드시 물어볼 지점들을 먼저 공개한다. 약점을 숨기는 것보다 인식하고 있음을 보여주는 것이 더 정직한 신호다.
+
+| 구분 | 내용 |
+|------|------|
+| 분산 추적 없음 | 3개 서비스(TS·Go·C#)를 가로지르는 요청 흐름을 단일 뷰로 볼 수 없다. 가장 큰 운영 맹점 |
+| 테스트 전략 부재 | 단위/통합/계약 테스트 커버리지가 문서화되지 않았다. Kafka 계약 테스트 특히 부재 |
+| WebSocket 멀티 인스턴스 미검증 | Redis SET 라우팅이 단일 인스턴스 기준. 다중 인스턴스 시 pub/sub 릴레이 미구현 |
+| DLQ 재처리 미세부 설계 | 재처리 백오프, 독성 메시지 감지, 재시도 상한이 명시되지 않음 |
+| 실운영 수치 없음 | Pre-Launch 단계. 동시 접속자·Kafka 처리량은 실측값이 아닌 설계 기준값 |
+
+**면접에서 예상되는 깊은 기술 질문:**
+
+1. "분사 명령이 DLQ에 들어갔을 때 어떻게 재처리하고, 잘못된 형식의 명령에 대한 무한 재시도 루프를 어떻게 방지하나요?"
+
+2. "Coil 폴링 워커가 Modbus TCP 응답을 기다리다 hang되면, 나머지 4개 백그라운드 서비스에 어떤 일이 생기나요? 프로덕션에서 hung worker를 어떻게 감지할 건가요?"
+
+3. "PLC 멱등성에 Redis NX + DB 상태 이중 검증을 씁니다. Redis가 일시적으로 불가능할 때 멱등성 보장은 유지되나요? 실패 경로를 설명해주세요."
+
+4. "TimescaleDB hypertable 설정은 ORM 마이그레이션 후 수동 SQL 실행이 필요합니다. 새 환경이 그 단계를 건너뛰는 것을 무엇이 방지하고, 건너뛰면 언제 어떻게 드러나나요?"
+
+5. "WebSocket 라우팅이 Redis SET으로 O(1)입니다. Main API를 3개 인스턴스로 실행할 때, 인스턴스 A의 사용자가 끊겼는데 Redis에는 여전히 등록되어 있다면, 인스턴스 B는 어떻게 stale 연결을 감지하나요?"
+
+-----
+
+## 📊 Coin Data API 상세
 
 **설계 원칙의 도메인 일반화 증명 — DI 컨테이너 · 웹서버 프레임워크 직접 구현 · 외부 데이터 파이프라인**
 
-> 메인 포트폴리오의 설계 원칙이 게임 외 도메인에서도 동일하게 작동함을 증명한 프로젝트입니다.  
-> 단순히 라이브러리를 "사용"하는 것을 넘어, 프레임워크가 **왜 그렇게 설계되었는지**를 직접 구현으로 증명했습니다.
+> 메인 포트폴리오의 설계 원칙이 게임 외 도메인에서도 동일하게 작동함을 증명한 프로젝트.  
+> 라이브러리를 "사용"하는 것을 넘어, 프레임워크가 **왜 그렇게 설계되었는지**를 직접 구현으로 증명했다.
 
 ```mermaid
 graph TB
@@ -525,21 +510,6 @@ graph TB
 | `IExchangeKlineManager` 인터페이스 | 거래소 교체 가능성 전제 | 데이터 소스 변경 시 서비스 무영향 |
 | `RxConcurrentDictionary` | 동시성 + 반응형 데이터 필요 | 스레드 안전 + 변경 스트림 구독 |
 
-**장애 격리 설계:**
-
-```mermaid
-flowchart LR
-    A["Binance WebSocket 장애"] -->|격리| B["DataResource 캐시 유지"]
-    B --> C["API 정상 제공 유지"]
-    D["거래소 스키마 변경"] -->|흡수| E["IExchangeKlineManager 구현체만 수정"]
-    E --> F["내부 표준 API 계약 유지"]
-
-    style A fill:#e74c3c,color:#fff
-    style D fill:#e74c3c,color:#fff
-    style C fill:#27ae60,color:#fff
-    style F fill:#27ae60,color:#fff
-```
-
 **메인 포트폴리오 설계 원칙 — 도메인 일반화 대응표:**
 
 | 원칙 | 메인 포트폴리오 (게임) | Coin Data API (금융) |
@@ -548,10 +518,6 @@ flowchart LR
 | **정규화 계층** | Domain Event → DB Schema | External API → Internal Schema |
 | **계약 안정성** | 운영 API 불변 유지 | 클라이언트 API 불변 유지 |
 | **비동기 처리** | Kafka Event Stream | WebSocket → Queue → Cache |
-| **장애 복구** | Redis Hot / MongoDB Cold Snapshot | In-Memory Cache + 자동 재연결 |
-
-> **핵심 메시지**: "설계 원칙은 게임 도메인에만 국한되지 않습니다.  
-> 같은 원칙이 금융 도메인에서도 동일하게 작동함을 직접 구현으로 증명합니다."
 
 -----
 
@@ -559,8 +525,6 @@ flowchart LR
 
 **IoT 현장 제어 시스템의 인프라 게이트웨이 레이어**
 
-> Production IoT Backend의 단일 진입점 역할을 담당하는 Nginx 설계 문서입니다.  
-> 설정 파일 코드보다 **왜 이렇게 설계했는가**에 집중한 인프라 포트폴리오입니다.
 ```mermaid
 flowchart LR
     subgraph INFRA["Nginx Gateway 핵심 역할"]
@@ -569,8 +533,6 @@ flowchart LR
         SEC["🛡️ 보안 게이트\nRate Limit · IP 접근 제어"]
         MEDIA["📷 스트리밍 프록시\nCCTV 동적 라우팅 · MinIO 캐시"]
     end
-
-    MAIN["🚩 Main Portfolio\n(메인 포트폴리오)"] -->|인프라 레이어| INFRA
 ```
 
 | 설계 포인트 | 판단 근거 |
@@ -586,15 +548,11 @@ flowchart LR
 
 **GPU 프레임 예산 직접 측정 — 커스텀 라이팅 · Dissolve · 아웃라인 직접 구현**
 
-> 단순히 셰이더를 사용한 것이 아니라, 렌더링 비용을 수치로 측정하고 최적화한 경험입니다.
-> 이 과정에서 얻은 클라이언트 부하 이해가 메인 포트폴리오의 서버 설계 판단으로 이어졌습니다.
-
 | 구현 내용 | 핵심 수치 / 결과 | 메인 포트폴리오로 이어진 인사이트 |
 |----------|---------------|-------------------------------|
 | CustomLight.hlsl 직접 구현 | Unity 기본 라이팅 우회 → 프레임 비용 측정 가능 | 클라이언트 렌더링 비용을 블랙박스가 아닌 수치로 이해 |
 | GPU Instancing 도입 | Draw Call 100개 → 1~5개 | 서버 동기화 빈도 20fps 제한의 설계 근거 |
 | LOD 3단계 구성 | 근거리 LOD 300 / 원거리 Unlit | 프레임 예산 = 고정 자원, 집중과 절감의 배분 |
-| Dissolve 마스크 6종 조합 | 최대 24개 동시 적용 | 확장 시 기존 코드 수정 없는 조합 구조 |
 
 -----
 
@@ -602,14 +560,10 @@ flowchart LR
 
 **클라이언트 중심 설계의 한계 직접 체험 — Server-authoritative 설계 판단의 출발점**
 
-> 이 프로젝트에서 잘 설계된 구조도 **멀티플레이어 확장 시도 순간** 근본적 한계를 드러냈습니다.  
-> 이 경험이 메인 포트폴리오에서 "상태 권한은 서버에만 존재해야 한다"는 설계 판단의 직접적 근거가 되었습니다.
-
 | Vampire Survival에서 체감한 문제 | 메인 포트폴리오의 해법 | 이어진 설계 판단 |
 |-------------------------------|---------------------|--------------|
 | 클라이언트 간 상태 불일치 — 어느 쪽이 진실인지 판정 불가 | 서버 단독 상태 관리 | 상태 권한은 서버에만 존재한다 |
 | 클라이언트 메모리 조작으로 치트 방어 구조적 불가능 | Command Validation (서버 검증) | 클라이언트 입력은 신뢰하지 않는다 |
-| 동기화 기준점 부재 — 확장할수록 불일치 누적 | Server-authoritative + 단일 GameLoop | 서버 상태가 유일한 진실(Single Source of Truth) |
 | 멀티플레이어 확장 시 전체 구조 교체 필요 | Zone 기반 수평 확장 설계 | 확장을 전제로 초기 구조를 설계한다 |
 
 -----
@@ -618,22 +572,20 @@ flowchart LR
 
 **메인 포트폴리오 Admin Dashboard의 선행 기술 검증 프로토타입**
 
-> 서버에서 설계한 상태 관리·스냅샷·이벤트 개념을 "실제로 UI로 구현할 수 있는가"를 먼저 검증한 프로젝트입니다.  
-> 메인 포트폴리오의 핵심 개념을 React + Zustand로 동작하는 형태로 옮겨 증명했습니다.
 ```mermaid
 graph LR
     subgraph Server["Main Portfolio 서버 개념"]
-        S1[Game Server State<br/>In-memory]
+        S1[Game Server State\nIn-memory]
         S2[Redis Hot Snapshot]
         S3[MongoDB Cold Snapshot]
-        S4[Event Sourcing<br/>단방향 흐름]
+        S4[Event Sourcing\n단방향 흐름]
     end
 
     subgraph UI["React 포트폴리오 UI 구현"]
-        U1[Zustand Global Store<br/>Single Source of Truth]
-        U2[메모리 스냅샷<br/>이름 붙여 저장·전환]
-        U3[JSON Export / Import<br/>파일 직렬화]
-        U4[Action → Store → View<br/>단방향 상태 흐름]
+        U1[Zustand Global Store\nSingle Source of Truth]
+        U2[메모리 스냅샷\n이름 붙여 저장·전환]
+        U3[JSON Export / Import\n파일 직렬화]
+        U4[Action → Store → View\n단방향 상태 흐름]
     end
 
     S1 -->|UI 레벨로 축소 적용| U1
@@ -645,19 +597,52 @@ graph LR
     style S2 fill:#c0392b,color:#fff
     style S3 fill:#27ae60,color:#fff
     style S4 fill:#8e44ad,color:#fff
-    style U1 fill:#2980b9,color:#fff
-    style U2 fill:#2980b9,color:#fff
-    style U3 fill:#2980b9,color:#fff
-    style U4 fill:#2980b9,color:#fff
 ```
 
-| Main Portfolio 설계 | React Portfolio 검증 |
-|--------------------|---------------------|
-| Game Server State (In-memory) | Zustand Single Source of Truth |
-| Redis Hot Snapshot | 메모리 스냅샷 저장·전환 |
-| MongoDB Cold Snapshot | JSON Export / Import |
-| Event Sourcing | Action → Store → View 단방향 흐름 |
-| Admin Dashboard 설계 | Inspector / Editor / Preview 패턴 구현 |
+-----
+
+## 🎯 자기 평가 — 채용 담당자 시각으로
+
+> 포트폴리오는 "팔려는 입장"에서 쓰이기 쉽다.  
+> 시니어 엔지니어라면 채용 담당자의 시각으로 자신의 작업물을 읽을 수 있어야 한다.  
+> 다음은 그 솔직한 읽기의 요약이다.
+
+### 채용 판단
+
+```
+⬛⬛⬛⬜  소극적 채용 → 적극적 채용
+         (면접 기술 깊이에 따라 달라짐)
+```
+
+**현재 레벨 추정:**
+```
+Senior Engineer     ████████░░  탄탄함
+Senior+             ██████░░░░  도달 중
+Staff               ████░░░░░░  초기 신호, 아직 미증명
+```
+
+### 강점 신호
+
+- 마이그레이션 결정이 추정이 아닌 측정된 실패에서 시작됨
+- "계획대로 되지 않은 것들" 섹션이 실존함 — 조작된 포트폴리오에는 없는 내용
+- Critical 버그 목록이 구체적이고 부끄러움 — 실제 코드 리뷰의 흔적
+- MSA 분리 시점 판단이 설계 선호가 아닌 도메인 이해 후 결정
+- 장애 격리를 피처 단위가 아닌 도메인 단위로 사고
+
+### 약한 신호 (솔직하게)
+
+- **처음부터 끝까지 단독**: 모든 설계 결정이 자기 정당화. 회의적인 동료에게 도전받은 기록 없음
+- **규모가 보이지 않음**: 실운영 전 단계. CCU, TPS 실측값 없음
+- **테스트 전략 부재**: 3개 언어 + Kafka + 경쟁 조건 버그가 있는 시스템에 명시적 테스트 전략 없음
+- **경력 공백**: 약 16개월 독학 전환 기간. 팀 컨텍스트 경험 공백
+- **분산 추적 없음**: 3개 서비스 추가 후에도 미구현 — Staff 레벨 우선순위 판단 의문
+
+### 면접에서 가장 날카로운 질문이 될 지점
+
+"당신의 WebSocket 서버를 3개 인스턴스로 수평 확장할 때, Redis SET 기반 라우팅에서 stale 연결을 어떻게 처리하나요?"
+
+이 질문에 명확하게 답할 수 있다면 — **Senior+에서 적극적 채용.**  
+답하지 못한다면 — **Senior.**
 
 -----
 
@@ -706,7 +691,6 @@ mindmap
 ![Bun](https://img.shields.io/badge/Bun-000000?style=flat-square&logo=bun&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white)
 ![ElysiaJS](https://img.shields.io/badge/ElysiaJS-5A67D8?style=flat-square&logo=elysia&logoColor=white)
-![Node.js](https://img.shields.io/badge/Node.js-339933?style=flat-square&logo=nodedotjs&logoColor=white)
 ![Nginx](https://img.shields.io/badge/Nginx-009639?style=flat-square&logo=nginx&logoColor=white)
 
 **🌡️ IoT / Protocol**  
@@ -744,3 +728,10 @@ mindmap
 단순 기술 나열이 아닌, **설계 판단의 축적**을 확인하고 싶다면 메인 포트폴리오를 먼저 보세요.
 
 **→ [portpolio_main](https://github.com/1985jwlee/portpolio_main)**
+
+**Email**: leejae.w.jl@icloud.com  
+**GitHub**: [@1985jwlee](https://github.com/1985jwlee)
+
+---
+
+**Last Updated**: 2026-03-19
